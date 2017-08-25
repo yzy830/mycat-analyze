@@ -9,6 +9,13 @@
 	under the License. -->
 <!DOCTYPE mycat:rule SYSTEM "rule.dtd">
 <mycat:rule xmlns:mycat="http://io.mycat/">
+    <tableRule name="mycat_pay_rule">
+        <rule>
+            <columns>user_id</columns>
+            <algorithm>mycat_pay_rule_function</algorithm>
+        </rule>
+    </tableRule>
+    
 	<tableRule name="rule1">
 		<rule>
 			<columns>id</columns>
@@ -79,6 +86,10 @@
 			<algorithm>jump-consistent-hash</algorithm>
 		</rule>
 	</tableRule>
+	
+	<function name="mycat_pay_rule_function" class="io.mycat.route.function.PartitionByMod">
+        <property name="count">2</property>
+    </function>
 
 	<function name="murmur"
 		class="io.mycat.route.function.PartitionByMurmurHash">

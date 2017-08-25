@@ -72,8 +72,8 @@
 	-->
 	
 	<user name="root">
-		<property name="password">digdeep</property>
-		<property name="schemas">TESTDB</property>
+		<property name="password">root</property>
+		<property name="schemas">mycat</property>
 		
 		<!-- 表级 DML 权限设置 -->
 		<!-- 		
@@ -88,7 +88,7 @@
 
 	<user name="user">
 		<property name="password">user</property>
-		<property name="schemas">TESTDB</property>
+		<property name="schemas">mycat</property>
 		<property name="readOnly">true</property>
 	</user>
 
