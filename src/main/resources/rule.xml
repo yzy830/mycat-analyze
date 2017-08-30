@@ -16,6 +16,20 @@
         </rule>
     </tableRule>
     
+    <tableRule name="mycat_custom_rule">
+        <rule>
+            <columns>cust_id</columns>
+            <algorithm>mycat_custom_rule_function</algorithm>
+        </rule>
+    </tableRule>
+    
+    <tableRule name="mycat_shop_rule">
+        <rule>
+            <columns>shop_id</columns>
+            <algorithm>mycat_shop_rule_function</algorithm>
+        </rule>
+    </tableRule>
+    
 	<tableRule name="rule1">
 		<rule>
 			<columns>id</columns>
@@ -86,6 +100,14 @@
 			<algorithm>jump-consistent-hash</algorithm>
 		</rule>
 	</tableRule>
+	
+	<function name="mycat_shop_rule_function" class="io.mycat.route.function.PartitionByMod">
+	   <property name="count">2</property>
+	</function>
+	
+	<function name="mycat_custom_rule_function" class="io.mycat.route.function.PartitionByMod">
+	   <property name="count">2</property>
+	</function>
 	
 	<function name="mycat_pay_rule_function" class="io.mycat.route.function.PartitionByMod">
         <property name="count">2</property>

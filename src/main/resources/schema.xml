@@ -2,23 +2,43 @@
 <!DOCTYPE mycat:schema SYSTEM "schema.dtd">
 <mycat:schema xmlns:mycat="http://io.mycat/">
     <!-- 给schema设置dataNode，可以在 -->
-    <schema name="mycat" checkSQLschema="false" sqlMaxLimit="100" dataNode="dn1">
+    <schema name="mycat" checkSQLschema="true" sqlMaxLimit="100" dataNode="dn1">
         <!-- user不分片 -->
-<!--         <table name="user" dataNode="dn1, dn2"></table> -->
-        <table name="pay" dataNode="dn1, dn2" rule="mycat_pay_rule"></table>
+        <table name="user" dataNode="dn1" ruleRequired="false" autoIncrement="true" primaryKey="user_id">
+            
+        </table>
+        <table name="pay" dataNode="dn1, dn2" rule="mycat_pay_rule" primaryKey="pay_id">
+            <childTable name="pay_item" parentKey="pay_id" joinKey="parent_id"></childTable>
+        </table>
+        <table name="mycat_sequence" dataNode="dn1" primaryKey="name"></table>
+        
+        <table name="custom" dataNode="dn1,dn2" primaryKey="cust_id" rule="mycat_custom_rule">
+            <childTable name="order" parentKey="cust_id" joinKey="cust_id" primaryKey="order_id"></childTable>
+        </table>
+        
+        <table name="category" primaryKey="category_id" dataNode="dn1,dn2" autoIncrement="true"/>
+    </schema>
+    
+    <schema name="vcity_shop" checkSQLschema="true" sqlMaxLimit="100" dataNode="dn3">
+        <table name="shop" dataNode="dn3,dn4" rule="mycat_shop_rule" primaryKey="shop_id"></table>
     </schema>
     
     <dataNode dataHost="host242" name="dn1" database="mycat"></dataNode>
     <dataNode dataHost="host249" name="dn2" database="mycat"></dataNode>
     
+    <dataNode dataHost="host242" name="dn3" database="mycat1"></dataNode>
+    <dataNode dataHost="host249" name="dn4" database="mycat1"></dataNode>
+    
     <dataHost name="host242" dbType="mysql" writeType="0" balance="0" 
-        dbDriver="jdbc" minCon="10" maxCon="100">
+        dbDriver="native" minCon="10" maxCon="100">
         <heartbeat>select 1</heartbeat>
-        <writeHost host="master" user="pxsjuser" password="pxsj_123" url="jdbc:mysql://192.168.31.242:3306/mycat"></writeHost>
+        <writeHost host="master" user="pxsjuser" password="pxsj_123" url="192.168.31.242:3306">
+            
+        </writeHost>
     </dataHost>
     <dataHost name="host249" dbType="mysql" writeType="0" balance="0" 
-        dbDriver="jdbc" minCon="10" maxCon="100">
+        dbDriver="native" minCon="10" maxCon="100">
         <heartbeat>select 1</heartbeat>
-        <writeHost host="master" user="pxsjuser" password="pxsj_123" url="jdbc:mysql://192.168.31.249:3306/mycat"></writeHost>
+        <writeHost host="master" user="pxsjuser" password="pxsj_123" url="192.168.31.249:3306"></writeHost>
     </dataHost>
 </mycat:schema>
