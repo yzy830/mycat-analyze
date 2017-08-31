@@ -55,13 +55,22 @@ public abstract class AbstractConnection implements NIOConnection {
 
 	protected final NetworkChannel channel;
 	protected NIOProcessor processor;
+	/**
+	 * 负责具体的数据处理。例如MySQLConnectionHandler、FrontentAuthenticator等。
+	 */
 	protected NIOHandler handler;
 
 	protected int packetHeaderSize;
 	protected int maxPacketSize;
 	protected volatile ByteBuffer readBuffer;
+	/**
+	 * yzy: 记录上次还没有写完的ByteBuffer
+	 */
 	protected volatile ByteBuffer writeBuffer;
 	
+	/**
+	 * yzy: 等待写入的数据
+	 */
 	protected final ConcurrentLinkedQueue<ByteBuffer> writeQueue = new ConcurrentLinkedQueue<ByteBuffer>();
 	
 	protected volatile int readBufferOffset;
@@ -81,6 +90,9 @@ public abstract class AbstractConnection implements NIOConnection {
 
 	private long idleTimeout;
 
+	/**
+	 * yzy: SocketWR封装了具体的读写和注册操作
+	 */
 	private final SocketWR socketWR;
 
 	public AbstractConnection(NetworkChannel channel) {
@@ -206,6 +218,14 @@ public abstract class AbstractConnection implements NIOConnection {
 		return lastReadTime;
 	}
 
+	/**
+	 * 为一个连接分配NIOProcessor(处理器)。NIOProcessor是处理器抽象，提供内存和计算资源。
+	 * <p>
+	 * 这里在分配NIOProcessor时，同时从BufferPool分配了一个ReadBuffer，大小是一个chunk
+	 * </p>
+	 * 
+	 * @param processor
+	 */
 	public void setProcessor(NIOProcessor processor) {
 		this.processor = processor;
 		int size = processor.getBufferPool().getChunkSize();
@@ -236,6 +256,11 @@ public abstract class AbstractConnection implements NIOConnection {
 		return readBuffer;
 	}
 
+	/**
+	 * 从BufferPool分配内存，每次分配一个chunk
+	 * 
+	 * @return
+	 */
 	public ByteBuffer allocate() {
 		int size = this.processor.getBufferPool().getChunkSize();
 		ByteBuffer buffer = this.processor.getBufferPool().allocate(size);
@@ -250,9 +275,14 @@ public abstract class AbstractConnection implements NIOConnection {
 		this.handler = handler;
 	}
 
+	/**
+	 * 调用NIOHandler，处理特定业务数据
+	 * 
+	 * */
 	@Override
 	public void handle(byte[] data) {
 		if (isSupportCompress()) {
+		    // yzy: 这个是MYSQL的特定业务，不应该放在这里，应该由MySQLConnectionHandler来处理
 			List<byte[]> packs = CompressUtil.decompressMysqlPacket(data, decompressUnfinishedDataQueue);
 			for (byte[] pack : packs) {
 				if (pack.length != 0) {
@@ -264,6 +294,9 @@ public abstract class AbstractConnection implements NIOConnection {
 		}
 	}
 
+	/**
+	 * 现在在注册时，没有使用这个接口。这个实现并不好，还是应该实现这个接口
+	 * */
 	@Override
 	public void register() throws IOException {
 
@@ -278,7 +311,7 @@ public abstract class AbstractConnection implements NIOConnection {
 	}
 
 	/**
-	 * 读取可能的Socket字节流
+	 * 由SocketRW的asyncRead调用，处理读取数据
 	 */
 	public void onReadData(int got) throws IOException {
 		
@@ -303,9 +336,12 @@ public abstract class AbstractConnection implements NIOConnection {
 		for (;;) {
 			length = getPacketLength(readBuffer, offset);			
 			if (length == -1) {
+			    // 没能读取到足够的信息，将buffer空间压缩之后，直接退出等待下一次读取
 				if (offset != 0) {
 					this.readBuffer = compactReadBuffer(readBuffer, offset);
 				} else if (readBuffer != null && !readBuffer.hasRemaining()) {
+				    // read buffer的长度是固定的，1个chunk的大小，一个chunk的默认大小是4K，如果一个协议包
+				    // 超过4K，则无法读取
 					throw new RuntimeException( "invalid readbuffer capacity ,too little buffer size " 
 							+ readBuffer.capacity());
 				}
@@ -378,9 +414,10 @@ public abstract class AbstractConnection implements NIOConnection {
 			int offset, final int pkgLength) {
 		// need a large buffer to hold the package
 		if (pkgLength > maxPacketSize) {
+		    // yzy: maxPackageSize可配置，默认16M
 			throw new IllegalArgumentException("Packet size over the limit.");
 		} else if (buffer.capacity() < pkgLength) {
-		
+		    // 当buffer的消息不足以存放整个消息时，重新分配一个buffer
 			ByteBuffer newBuffer = processor.getBufferPool().allocate(pkgLength);
 			lastLargeMessageTime = TimeUtil.currentTimeMillis();
 			buffer.position(offset);
@@ -401,6 +438,13 @@ public abstract class AbstractConnection implements NIOConnection {
 		}
 	}
 	
+	/**
+	 * 压缩ByteBuffer，丢弃offset之前的数据
+	 * 
+	 * @param buffer
+	 * @param offset
+	 * @return
+	 */
 	private ByteBuffer compactReadBuffer(ByteBuffer buffer, int offset) {
 		if(buffer == null) {
 			return null;
@@ -554,6 +598,16 @@ public abstract class AbstractConnection implements NIOConnection {
 		}
 	}
 	
+	/**
+	 * 解析报文长度。返回信息 = 消息头长度 + 消息长度 
+	 * 
+	 * @param buffer
+	 *         报文buffer
+	 * @param offset
+	 *         偏移量
+	 *         
+	 * @return -1表示读取的数据量不足以解析报文长度
+	 */
 	protected int getPacketLength(ByteBuffer buffer, int offset) {
 		int headerSize = getPacketHeaderSize();
 		if ( isSupportCompress() ) {
@@ -563,6 +617,7 @@ public abstract class AbstractConnection implements NIOConnection {
 		if (buffer.position() < offset + headerSize) {
 			return -1;
 		} else {
+		    // 这里是严格按照MYSQL的协议来执行的，MYSQL报文头前三个字节是报文长度
 			int length = buffer.get(offset) & 0xff;
 			length |= (buffer.get(++offset) & 0xff) << 8;
 			length |= (buffer.get(++offset) & 0xff) << 16;

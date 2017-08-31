@@ -25,6 +25,8 @@ public class RouteStrategyFactory {
 		String defaultSqlParser = config.getDefaultSqlParser();
 		defaultSqlParser = defaultSqlParser == null ? "" : defaultSqlParser;
 		//修改为ConcurrentHashMap，避免并发问题
+		// yzy: 只存储了一个druidparser，配置其他的sqlParser似乎并不会生效
+		//      另外，这个方法在初始化构造器中调用，不存在并发问题
 		strategyMap.putIfAbsent("druidparser", new DruidMycatRouteStrategy());
 
 		defaultStrategy = strategyMap.get(defaultSqlParser);

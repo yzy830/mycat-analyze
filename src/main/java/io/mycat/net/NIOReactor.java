@@ -37,6 +37,10 @@ import org.slf4j.Logger; import org.slf4j.LoggerFactory;
  * 网络事件反应器
  * 
  * <p>
+ * 这个类的主要组建是一个RW。使用一个单线程来执行select信息，完成读写操作
+ * </p>
+ * 
+ * <p>
  * Catch exceptions such as OOM so that the reactor can keep running for response client!
  * </p>
  * @since 2016-03-30
@@ -58,6 +62,14 @@ public final class NIOReactor {
 		new Thread(reactorR, name + "-RW").start();
 	}
 
+	/**
+	 * yzy: channel注册采用先进等待队列，在唤醒selector拉取等待队列注册的原因在于，
+	 * selector内部使用synchronized同步channel注册，如果channel并发注册量
+	 * 较大，会产生严重竞争。
+	 * ConcurrentLinkedList，应该是使用CAS操作完成，并发扩展性更好
+	 * 
+	 * @param c
+	 */
 	final void postRegister(AbstractConnection c) {
 		reactorR.registerQueue.offer(c);
 		reactorR.selector.wakeup();

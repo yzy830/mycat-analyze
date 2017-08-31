@@ -30,6 +30,11 @@ import java.nio.channels.NetworkChannel;
 import io.mycat.backend.BackendConnection;
 
 /**
+ * 后端连接。连接MYSQL或者PG数据等。
+ * <p>
+ * 子类有MySQLConnection和PostgreSQL
+ * <p>
+ * 
  * @author mycat
  */
 public abstract class BackendAIOConnection extends AbstractConnection implements

@@ -91,8 +91,14 @@ public class MycatServer {
 	
 	private static final MycatServer INSTANCE = new MycatServer();
 	private static final Logger LOGGER = LoggerFactory.getLogger("MycatServer");
+	/**
+	 * SQL路由器
+	 */
 	private final RouteService routerService;
 	private final CacheService cacheService;
+	/**
+	 * 读取src/main/conf/dnindex.properties的配置
+	 */
 	private Properties dnIndexProperties;
 	
 	//AIO连接群组
@@ -122,8 +128,17 @@ public class MycatServer {
 		return INSTANCE;
 	}
 
+	/**
+	 * 配置
+	 */
 	private final MycatConfig config;
+	/**
+	 * 定时器线程池(单线程)，用于触发定时任务
+	 */
 	private final ScheduledExecutorService scheduler;
+	/**
+	 * SQL记录器，作用不确定
+	 */
 	private final SQLRecorder sqlRecorder;
 	private final AtomicBoolean isOnline;
 	private final long startupTime;
@@ -131,6 +146,9 @@ public class MycatServer {
 	private SocketConnector connector;
 	private NameableExecutor businessExecutor;
 	private NameableExecutor timerExecutor;
+	/**
+	 * 用于异步处理businessExecutor的任务执行结果。
+	 */
 	private ListeningExecutorService listeningExecutorService;
 
 	private  long totalNetWorkBufferSize = 0;
@@ -249,6 +267,12 @@ public class MycatServer {
 		//ZkConfig.instance().initZk();
 	}
 
+	/**
+	 * @throws IOException
+	 */
+	/**
+	 * @throws IOException
+	 */
 	public void startup() throws IOException {
 
 		SystemConfig system = config.getSystem();
@@ -293,6 +317,7 @@ public class MycatServer {
 
 		switch (bufferPoolType){
 			case 0:
+			    // 默认情况下bufferPool全部使用DirectBuffer实现。每个DirectBuffer的大小为bufferPoolPageSize，一共有bufferPoolPageNumber个
 				bufferPool = new DirectByteBufferPool(bufferPoolPageSize,bufferPoolChunkSize,
 					bufferPoolPageNumber,system.getFrontSocketSoRcvbuf());
 			
@@ -334,6 +359,7 @@ public class MycatServer {
 		businessExecutor = ExecutorUtil.create("BusinessExecutor",
 				threadPoolSize);
 		timerExecutor = ExecutorUtil.create("Timer", system.getTimerExecutor());
+		// yzy: 用于异步执行回调businessExecutor的回调结果
 		listeningExecutorService = MoreExecutors.listeningDecorator(businessExecutor);
 
 		for (int i = 0; i < processors.length; i++) {
@@ -375,6 +401,7 @@ public class MycatServer {
 			NIOReactorPool reactorPool = new NIOReactorPool(
 					DirectByteBufferPool.LOCAL_BUF_THREAD_PREX + "NIOREACTOR",
 					processors.length);
+			// 创建后端连接处理器，负责后端连接的创建，一旦连接成功，交给NIOReactor处理
 			connector = new NIOConnector(DirectByteBufferPool.LOCAL_BUF_THREAD_PREX + "NIOConnector", reactorPool);
 			((NIOConnector) connector).start();
 

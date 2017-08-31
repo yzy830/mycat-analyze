@@ -43,6 +43,25 @@ import io.mycat.util.NameableExecutor;
 import io.mycat.util.TimeUtil;
 
 /**
+ * {@code NIOProcessor}是IO数据处理器。
+ * 
+ * <p>
+ * 一个NIOProcessor管理了一组FrontendConnection和一级BackendConnection，使用统一的一个executor完成业务处理。
+ * 这种方式的好处在于，可以控制线程的数量。
+ * </p>
+ * 
+ * <p>
+ * 每个NIOProcess可以拥有独立的BufferPool和Executor，但是当前还是公用的一个
+ * </p>
+ * 
+ * <p>
+ * 对外，通过MycatServer管理一组NIOProcessor，实现负载均衡。
+ * </p>
+ * 
+ * <p>
+ * 另外，NIOProcessor维护了一些统计量，方便观测系统压力
+ * </p>
+ * 
  * @author mycat
  */
 public final class NIOProcessor {
@@ -97,6 +116,11 @@ public final class NIOProcessor {
 
 	}
 
+	/**
+	 * 使用同一个executor
+	 * 
+	 * @return
+	 */
 	public NameableExecutor getExecutor() {
 		return this.executor;
 	}

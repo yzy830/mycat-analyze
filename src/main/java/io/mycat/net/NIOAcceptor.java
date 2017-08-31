@@ -61,6 +61,13 @@ public final class NIOAcceptor extends Thread  implements SocketAcceptor{
 		this.serverChannel = ServerSocketChannel.open();
 		this.serverChannel.configureBlocking(false);
 		/** 设置TCP属性 */
+		// yzy: SO_REUSEADDR属性有多个作用，其中一个重要作用，主要是解决socket address被一个属于TIME_WAIT状态的socket
+		// 占用的时，如何进行后续操作的问题。
+		// 当一个stream socket被关闭时，output buffer中很可能还有数据尚未被发送出去，这个时候操作系统会将这个socket设置为
+		// TIME_WAIT状态，直到数据发送完或者超时(LINGER_TIME，使用SO_LINGER可以设置)
+		// 如果在这个时候，再次在这个socket address上绑定socket,并且没有设置SO_REUSEADDR，就会失败。这种情况，主要发生在重启
+		// 服务的时候。
+		// 而设置了这个标志之后，则允许再次绑定到这个socket address上
 		serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
 		serverChannel.setOption(StandardSocketOptions.SO_RCVBUF, 1024 * 16 * 2);
 		// backlog=100
@@ -116,6 +123,7 @@ public final class NIOAcceptor extends Thread  implements SocketAcceptor{
 			c.setProcessor(processor);
 			
 			NIOReactor reactor = reactorPool.getNextReactor();
+			// 不管是NIOConnector还是NIOAcceptor，在完成连接之后，都交给了NIOReactor处理
 			reactor.postRegister(c);
 
 		} catch (Exception e) {

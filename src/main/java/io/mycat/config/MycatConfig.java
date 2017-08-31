@@ -70,8 +70,8 @@ public class MycatConfig {
 		
 		//读取schema.xml，rule.xml和server.xml
 		ConfigInitializer confInit = new ConfigInitializer(true);
-		this.system = confInit.getSystem();
 		this.users = confInit.getUsers();
+		this.system = confInit.getSystem();
 		this.schemas = confInit.getSchemas();
 		this.dataHosts = confInit.getDataHosts();
 

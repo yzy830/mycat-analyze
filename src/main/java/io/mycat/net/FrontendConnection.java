@@ -49,6 +49,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
+ * 用户端连接
+ * 
  * @author mycat
  */
 public abstract class FrontendConnection extends AbstractConnection {

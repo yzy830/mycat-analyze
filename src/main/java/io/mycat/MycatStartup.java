@@ -42,6 +42,7 @@ public final class MycatStartup {
     private static final Logger LOGGER = LoggerFactory.getLogger(MycatStartup.class);
     public static void main(String[] args) {
         //use zk ?
+        // yzy: 先不考虑ZK，没有ZK也能正常工作
         ZkConfig.getInstance().initZk();
         try {
             String home = SystemConfig.getHomePath();

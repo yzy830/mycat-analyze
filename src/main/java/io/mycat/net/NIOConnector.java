@@ -62,6 +62,16 @@ public final class NIOConnector extends Thread implements SocketConnector {
 		return connectCount;
 	}
 
+	/**
+	 * 发起连接
+	 * 
+	 * <p>
+	 * 将要建立的连接放入队列，唤醒selector。selector在唤醒后，会从队列拉取要处理的连接，执行注册
+	 * </p>
+	 * 
+	 * @param c
+	 *         连接
+	 */
 	public void postConnect(AbstractConnection c) {
 		connectQueue.offer(c);
 		selector.wakeup();
@@ -80,6 +90,8 @@ public final class NIOConnector extends Thread implements SocketConnector {
 					for (SelectionKey key : keys) {
 						Object att = key.attachment();
 						if (att != null && key.isValid() && key.isConnectable()) {
+						    // key.isConnectable为true，表示连接成功或者失败，此时调用finishConnect执行处理。
+						    // finishConnect调用SocketChannel.finishConnect()，如果连接失败，会抛出IOException
 							finishConnect(key, att);
 						} else {
 							key.cancel();
@@ -132,6 +144,11 @@ public final class NIOConnector extends Thread implements SocketConnector {
 	private boolean finishConnect(AbstractConnection c, SocketChannel channel)
 			throws IOException {
 		if (channel.isConnectionPending()) {
+		    // isConnectionPending表示，channel连接已经初始化(non-blocking channel调用了connect)，但是还没有调用finishConnect
+		    // finishConnect会产生三种结果
+		    // (1) 连接成功，返回true
+		    // (2) 连接失败，抛出IOException
+		    // (3) 正在连接中，返回false。因为外部已经使用selector等待，并判断了isConnectable，因此这种情况不存在
 			channel.finishConnect();
 
 			c.setLocalPort(channel.socket().getLocalPort());

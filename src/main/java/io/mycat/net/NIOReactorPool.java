@@ -2,6 +2,12 @@ package io.mycat.net;
 
 import java.io.IOException;
 
+/**
+ * 管理了一组NIOReactor，每个NIOReactor拥有一个selector负责处理IO监听
+ * 
+ * @author Administrator
+ *
+ */
 public class NIOReactorPool {
 	private final NIOReactor[] reactors;
 	private volatile int nextReactor;
@@ -15,6 +21,11 @@ public class NIOReactorPool {
 		}
 	}
 
+	/**
+	 * 轮询选择Reactor，实现负载均衡
+	 * 
+	 * @return
+	 */
 	public NIOReactor getNextReactor() {
 //		if (++nextReactor == reactors.length) {
 //			nextReactor = 0;
