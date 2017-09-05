@@ -81,6 +81,7 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 
 
 		DruidParser druidParser = DruidParserFactory.create(schema, statement, visitor);
+		// yzy: 这个是sql语句解析的核心流程，稍微放后
 		druidParser.parser(schema, rrs, statement, stmt,cachePool,visitor);
 
 		/**

@@ -42,6 +42,14 @@ import io.mycat.backend.mysql.nio.handler.ResponseHandler;
 import io.mycat.config.Alarms;
 import io.mycat.config.model.DataHostConfig;
 
+/**
+ * 每一个host对应一个{@code PhysicalDBPool}。
+ * 
+ * <p>
+ * {@code PhysicalDBPool}管理了两组{@link PhysicalDatasource}: writeSources & readSources
+ * </p>
+ *
+ */
 public class PhysicalDBPool {
 	
 	protected static final Logger LOGGER = LoggerFactory.getLogger(PhysicalDBPool.class);

@@ -40,6 +40,17 @@ import io.mycat.util.TimeUtil;
 import org.slf4j.Logger; import org.slf4j.LoggerFactory;
 
 /**
+ * 抽象NIO连接，代表一个前台连接或者一个后台连接。
+ * 
+ * <p>
+ * 核心方法是{@link #asynRead()}、{@link #write(byte[])}、{@link #doNextWriteCheck()}三个方法
+ * <ol>
+ * <li>asyncRead: 读取流数据，并提取消息，交给{@link NIOHandler#handle(byte[])}处理</li>
+ * <li>write: 写入数据，首先将数据挂链，然后出发一次doNextWriteCheck</li>
+ * <li>doNextWriteCheck: 首先非阻塞同步写，如果没有写完，监听write消息，由NIOReactor负责触发</li>
+ * </ol>
+ * <p>
+ * 
  * @author mycat
  */
 public abstract class AbstractConnection implements NIOConnection {
@@ -333,6 +344,13 @@ public abstract class AbstractConnection implements NIOConnection {
 
 		// 循环处理字节信息
 		int offset = readBufferOffset, length = 0, position = readBuffer.position();
+		/*
+		 * 整个数据读取的思路是：
+		 * (1) 复用一个readBuffer，避免内存的反复申请和释放
+		 * (2) 由于流数据是连续来的，因此使用readBufferOffset来处理同一段数据内有多个命令的情况。避免使用buffer#compact带来的CPU开销
+		 * (3) 如果readBuffer不足以容纳数据，首先尝试compact buffer；如果空Buffer都不足以容纳消息，则根据消息体大小，重新分配一个消息。
+		 *     buffer的最大长度受maxPacketSize控制，默认为16M
+		 * */
 		for (;;) {
 			length = getPacketLength(readBuffer, offset);			
 			if (length == -1) {
@@ -340,8 +358,8 @@ public abstract class AbstractConnection implements NIOConnection {
 				if (offset != 0) {
 					this.readBuffer = compactReadBuffer(readBuffer, offset);
 				} else if (readBuffer != null && !readBuffer.hasRemaining()) {
-				    // read buffer的长度是固定的，1个chunk的大小，一个chunk的默认大小是4K，如果一个协议包
-				    // 超过4K，则无法读取
+				    // readBuffer在ensureFreeSpaceOfReadBuffer方法中会适应包的大小增长。在这里，
+				    // 由于不知道包的大小，因此只能抛出异常
 					throw new RuntimeException( "invalid readbuffer capacity ,too little buffer size " 
 							+ readBuffer.capacity());
 				}
@@ -349,7 +367,7 @@ public abstract class AbstractConnection implements NIOConnection {
 			}
 
 			if (position >= offset + length && readBuffer != null) {
-				
+				// yzy: 读取到了完整的业务数据，将数据提取出来
 				// handle this package
 				readBuffer.position(offset);				
 				byte[] data = new byte[length];
@@ -474,6 +492,9 @@ public abstract class AbstractConnection implements NIOConnection {
 	}
 
 
+	/**
+	 * 将Buffer挂入writeQueue，等待异步发送。这个操作会触发一次{@link SocketWR#doNextWriteCheck()}，触发一次同步写，并注册异步写
+	 * */
     @Override
 	public final void write(ByteBuffer buffer) {
     	
@@ -496,6 +517,18 @@ public abstract class AbstractConnection implements NIOConnection {
 	}
 
 	
+	/**
+	 * 检查buffer的剩余空间是否满足capacity容量要求。如果满足，直接返回；如果不满足：
+	 * <ol>
+	 * <li>如果writeSocketIfFull为true，分配一个新的buffer，原来的buffer挂入writeQueue</li>
+	 * <li>如果writeSocketIfFull为false，则分配一个新的buffer，将原来的buffer内容拷贝进去，然后返回</li>
+	 * </ol>
+	 * 
+	 * @param buffer
+	 * @param capacity
+	 * @param writeSocketIfFull
+	 * @return
+	 */
 	public ByteBuffer checkWriteBuffer(ByteBuffer buffer, int capacity, boolean writeSocketIfFull) {
 		if (capacity > buffer.remaining()) {
 			if (writeSocketIfFull) {
@@ -513,6 +546,14 @@ public abstract class AbstractConnection implements NIOConnection {
 		}
 	}
 
+	/**
+	 * 将src写入buffer，如果buffer空间不足，将buffer挂入writeQueue(当NIOConnector检测到数据可发送时，会从writeQueue
+	 * 取出bytebuffer完成发送)，分配信息的bytebuffer继续写入数据，并返回最后一次分配的buffer
+	 * 
+	 * @param src
+	 * @param buffer
+	 * @return
+	 */
 	public ByteBuffer writeToBuffer(byte[] src, ByteBuffer buffer) {
 		int offset = 0;
 		int length = src.length;
@@ -560,6 +601,9 @@ public abstract class AbstractConnection implements NIOConnection {
 		return isClosed.get();
 	}
 
+	/**
+	 * 这个方法命名不好，不仅检查了是否idle，在idle情况下会关闭连接
+	 * */
 	public void idleCheck() {
 		if (isIdleTimeout()) {
 			LOGGER.info(toString() + " idle timeout");

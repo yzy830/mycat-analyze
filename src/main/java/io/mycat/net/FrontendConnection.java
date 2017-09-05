@@ -300,6 +300,7 @@ public abstract class FrontendConnection extends AbstractConnection {
 		
 		// 防火墙策略( SQL 黑名单/ 注入攻击)
 		if ( !privileges.checkFirewallSQLPolicy( user, sql ) ) {
+		    // yzy: 检查权限和和名单这些东西。应该对应server中的配置，暂时忽略
 			writeErrMessage(ErrorCode.ERR_WRONG_USED, 
 					"The statement is unsafe SQL, reject for user '" + user + "'");
 			return;
@@ -329,7 +330,9 @@ public abstract class FrontendConnection extends AbstractConnection {
 		String sql = null;		
 		try {
 			MySQLMessage mm = new MySQLMessage(data);
+			// 消息长度 (3) + 消息序列号(1) + 命令类型(1) = 5 
 			mm.position(5);
+			// COM_QUERY命令，后续所有数据都是命令字符串
 			sql = mm.readString(charset);
 		} catch (UnsupportedEncodingException e) {
 			writeErrMessage(ErrorCode.ER_UNKNOWN_CHARACTER_SET, "Unknown charset '" + charset + "'");

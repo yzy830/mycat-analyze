@@ -43,6 +43,12 @@ import io.mycat.net.mysql.QuitPacket;
 /**
  * 前端认证处理器
  * 
+ * <p>
+ * 采用状态机模式，认证通过后，在{@link #success(AuthPacket)}方法中，调用
+ * {@link FrontendConnection#setHandler(NIOHandler)}将handler
+ * 设置为{@link FrontendCommandHandler}，处理后续命令
+ * </p>
+ * 
  * @author mycat
  */
 public class FrontendAuthenticator implements NIOHandler {

@@ -52,6 +52,7 @@ public class FrontendCommandHandler implements NIOHandler
     {
         if(source.getLoadDataInfileHandler()!=null&&source.getLoadDataInfileHandler().isStartLoadData())
         {
+            // yzy: 这个分支没有走到，暂时不清楚作用，放后
             MySQLMessage mm = new MySQLMessage(data);
             int  packetLength = mm.readUB3();
             if(packetLength+4==data.length)

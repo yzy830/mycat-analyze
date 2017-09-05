@@ -27,6 +27,8 @@ import io.mycat.route.parser.util.CharTypes;
 import io.mycat.route.parser.util.ParseUtil;
 
 /**
+ * 解析一个SELECT语句的具体类型，例如select datebase()，返回{@link #DATABASE}；普通的select语句返回{@link #OTHER}
+ * 
  * @author mycat
  */
 public final class ServerParseSelect {
@@ -53,6 +55,15 @@ public final class ServerParseSelect {
 	private static final char[] _DATABASE = "DATABASE()".toCharArray();
 	private static final char[] _CURRENT_USER = "CURRENT_USER()".toCharArray();
 
+	/**
+	 * 主要解析一些特殊的select命令，例如获取database、versoin、session变量、last_insert_id()等信息。这些信息中，
+	 * 有些不需要传递给后端DB，可直接返回，例如database、version等；有些，需要特殊处理，例如last_insert_id()；对于普通
+	 * 的select语句，返回{@link #OTHER}
+	 * 
+	 * @param stmt
+	 * @param offset
+	 * @return
+	 */
 	public static int parse(String stmt, int offset) {
 		int i = offset;
 		for (; i < stmt.length(); ++i) {
@@ -437,6 +448,13 @@ public final class ServerParseSelect {
 		return IDENTITY;
 	}
 
+	/**
+	 * 解析select @@VERSION_COMMENT等命令
+	 * 
+	 * @param stmt
+	 * @param offset
+	 * @return
+	 */
 	static int select2Check(String stmt, int offset) {
 		if (stmt.length() > ++offset && stmt.charAt(offset) == '@'
 				&& stmt.length() > ++offset) {

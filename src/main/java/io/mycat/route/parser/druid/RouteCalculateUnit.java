@@ -9,7 +9,20 @@ import io.mycat.sqlengine.mpp.ColumnRoutePair;
 import io.mycat.sqlengine.mpp.RangeValue;
 
 /**
- * 路由计算单元
+ * 路由计算单元。
+ * 
+ * <p>
+ * mycat的路由计算单元是表，{@code RouteCalculateUnit}中的核心数据是一个 map {@link #tablesAndConditions}。
+ * 其key是表名，value是列、值对。
+ * </p>
+ * 
+ * <p>
+ * {@code tablesAndConditions}的每一个value也是一个map结构，其key实一个列，value是一个set接口，是这个列可取的值
+ * </p>
+ * 
+ * <p>
+ * 一个查询语句中，如果存在OR条件，则会拆分为多个RouteCalculateUnit。每个unit单独计算分片，然后求一个并集
+ * </p>
  * 
  * @author wang.dw
  * @date 2015-3-14 下午6:24:54

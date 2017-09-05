@@ -29,6 +29,7 @@ import io.mycat.backend.ConMap;
 import io.mycat.backend.ConQueue;
 import io.mycat.backend.heartbeat.DBHeartbeat;
 import io.mycat.backend.mysql.nio.MySQLConnection;
+import io.mycat.backend.mysql.nio.MySQLDataSource;
 import io.mycat.backend.mysql.nio.handler.ConnectionHeartBeatHandler;
 import io.mycat.backend.mysql.nio.handler.DelegateResponseHandler;
 import io.mycat.backend.mysql.nio.handler.NewConnectionRespHandler;
@@ -49,6 +50,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 抽象的后端物理数据源，子类包括{@link MySQLDataSource}等
+ *
+ */
 public abstract class PhysicalDatasource {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(PhysicalDatasource.class);

@@ -55,6 +55,9 @@ public class NonBlockingSession implements Session {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(NonBlockingSession.class);
 
+    /**
+     * 拥有这个session的前段连接
+     */
     private final ServerConnection source;
     private final ConcurrentHashMap<RouteResultsetNode, BackendConnection> target;
     private final ConcurrentHashMap<RouteResultsetNode, BackendConnection> lockedTarget;

@@ -29,6 +29,10 @@ import io.mycat.backend.BackendConnection;
 import io.mycat.backend.mysql.nio.handler.ResponseHandler;
 import io.mycat.route.RouteResultsetNode;
 
+/**
+ * 表示一个data node，{@link #dbPool}是对应的datahost
+ *
+ */
 public class PhysicalDBNode {
 	protected static final Logger LOGGER = LoggerFactory
 			.getLogger(PhysicalDBNode.class);

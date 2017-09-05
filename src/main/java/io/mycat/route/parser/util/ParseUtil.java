@@ -342,6 +342,14 @@ public final class ParseUtil {
         return i;
     }
 
+    /**
+     * 从offset，忽略后续的空格、换行、tab、注释等字符，返回跳过这些字符之后的offset + length
+     * 
+     * @param stmt
+     * @param offset
+     * @param length
+     * @return
+     */
     public static int move(String stmt, int offset, int length) {
         int i = offset;
         for (; i < stmt.length(); ++i) {

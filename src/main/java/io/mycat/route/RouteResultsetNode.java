@@ -31,6 +31,12 @@ import io.mycat.server.parser.ServerParse;
 import io.mycat.sqlengine.mpp.LoadData;
 
 /**
+ * 代表一个数据路由节点。一个{@link RouteResultset}由一组{@code RouteResultsetNode}构成。
+ * 
+ * <p>
+ * {@link #canRunInReadDB}等信息来自于{@link RouteResultset}。
+ * </p>
+ * 
  * @author mycat
  */
 public final class RouteResultsetNode implements Serializable , Comparable<RouteResultsetNode> {
@@ -109,6 +115,11 @@ public final class RouteResultsetNode implements Serializable , Comparable<Route
 	}
 
 	/**
+	 * <p>
+	 * 这是mycat判断主从的原则，后面有必要测试一下，可能会影响java的代码风格。mycat只有在autocommit为true的情况下或者在使用了\/*balance*\/注解
+	 * 是，才会对select/show语句使用slave。那么，如果使用@Transactional注解，autocommit会被关闭，在大部分情况下，都会走到master
+	 * </p>
+	 * 
 	 * 这里的逻辑是为了优化，实现：非业务sql可以在负载均衡走slave的效果。因为业务sql一般是非自动提交，
 	 * 而非业务sql一般默认是自动提交，比如mysql client，还有SQLJob, heartbeat都可以使用
 	 * 了Leader-us优化的query函数，该函数实现为自动提交；

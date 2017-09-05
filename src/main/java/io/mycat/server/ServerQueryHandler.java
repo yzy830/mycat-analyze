@@ -56,7 +56,7 @@ public class ServerQueryHandler implements FrontendQueryHandler {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(new StringBuilder().append(c).append(sql).toString());
 		}
-		//
+		// 解析sql类型，rs的结果分为两个部分，低八位是sql类型，高位是sql内容偏移量
 		int rs = ServerParse.parse(sql);
 		int sqlType = rs & 0xff;
 		

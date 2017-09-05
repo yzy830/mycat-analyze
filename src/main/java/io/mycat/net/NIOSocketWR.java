@@ -40,6 +40,12 @@ public class NIOSocketWR extends SocketWR {
 		}
 	}
 
+	/**
+	 * doNextWriteCheck会首先尝试非阻塞同步写入。当writebuffer慢的时候，注册监听写事件，完成异步写操作。
+	 * <p>
+	 * 这里的同步操作非常精细，需要再分析。主要是要保证，不会存在writeQuery有数据，但是却没有监听写事件的的情况
+	 * </p>
+	 * */
 	public void doNextWriteCheck() {
 
 		if (!writing.compareAndSet(false, true)) {

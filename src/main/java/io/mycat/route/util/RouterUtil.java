@@ -693,6 +693,15 @@ public class RouterUtil {
 		processSQL(sc, schema, new String(newSQLBuf), sqlType);
 	}
 
+	/**
+	 * 创建RouteResultsetNode，并添加到RouteResultset
+	 * 
+	 * @param cache
+	 * @param rrs
+	 * @param dataNodes
+	 * @param stmt
+	 * @return
+	 */
 	public static RouteResultset routeToMultiNode(boolean cache,RouteResultset rrs, Collection<String> dataNodes, String stmt) {
 		RouteResultsetNode[] nodes = new RouteResultsetNode[dataNodes.size()];
 		int i = 0;
@@ -930,7 +939,12 @@ public class RouterUtil {
 	}
 
 	/**
-	 * 多表路由
+	 * 多表路由。
+	 * 
+	 * <p>
+	 * 同时可处理单表路由(调用{@link #tryRouteForOneTable(SchemaConfig, DruidShardingParseInfo, RouteCalculateUnit, String, RouteResultset, boolean, LayerCachePool)})
+	 * 和多表路由
+	 * </p>
 	 */
 	public static RouteResultset tryRouteForTables(SchemaConfig schema, DruidShardingParseInfo ctx,
 			RouteCalculateUnit routeUnit, RouteResultset rrs, boolean isSelect, LayerCachePool cachePool)
@@ -1031,6 +1045,19 @@ public class RouterUtil {
 	/**
 	 *
 	 * 单表路由
+	 * 
+	 * <p>
+	 * 单表路由的情况下，分两种情况(dist table搞不清楚，暂时不管)：
+	 * <ol>
+	 * <li>全局表：对于查询语句，路由到任意一个表；对于dml语句，如有到所有表</li>
+	 * <li>非全局表：
+	 *     <ul>
+	 *         <li>如果没有配置分片建，且不是子表，路由到所有节点</li>
+	 *         <li>根据路由规则来计算分片<li>
+	 *     </ul>
+	 * </li>
+	 * <ol>  
+	 * </p>
 	 */
 	public static RouteResultset tryRouteForOneTable(SchemaConfig schema, DruidShardingParseInfo ctx,
 			RouteCalculateUnit routeUnit, String tableName, RouteResultset rrs, boolean isSelect,
@@ -1067,6 +1094,8 @@ public class RouterUtil {
 			}
 			if(tc.getPartitionColumn() == null && !tc.isSecondLevel()) {//单表且不是childTable
 //				return RouterUtil.routeToSingleNode(rrs, tc.getDataNodes().get(0),ctx.getSql());
+			    // 这个地方体现了全局表和不分片表的差别。全局表，对dml，路由到全部节点；对于select语句，路由到任意单个结单，采用随机方式，负载均衡。
+			    // 不分片表，对于dml和select，都会路由到所有节点，性能上比较差
 				return routeToMultiNode(rrs.isCacheAble(), rrs, tc.getDataNodes(), ctx.getSql());
 			} else {
 				//每个表对应的路由映射
@@ -1079,6 +1108,7 @@ public class RouterUtil {
 				}
 
 				if(tablesRouteMap.get(tableName) == null) {
+				    // 没有找到这个表的数据结单，路由到所有结点
 					return routeToMultiNode(rrs.isCacheAble(), rrs, tc.getDataNodes(), ctx.getSql());
 				} else {
 					return routeToMultiNode(rrs.isCacheAble(), rrs, tablesRouteMap.get(tableName), ctx.getSql());

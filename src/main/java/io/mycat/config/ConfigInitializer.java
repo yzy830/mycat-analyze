@@ -66,6 +66,9 @@ public class ConfigInitializer {
 	private volatile Map<String, UserConfig> users;
 	private volatile Map<String, SchemaConfig> schemas;
 	private volatile Map<String, PhysicalDBNode> dataNodes;
+	/**
+	 * 从hostname到PhysicalDBPool的映射，PhysicalDBPool管理读写数据源
+	 */
 	private volatile Map<String, PhysicalDBPool> dataHosts;
 
 	public ConfigInitializer(boolean loadDataHost) {

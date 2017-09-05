@@ -31,6 +31,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 
 /**
+ * {@code MySQLMessage}提供了解析mysql消息的基本方法，例如读取一个整数、读取一个字符串等，方便后续做协议解析
+ * 
  * @author mycat
  */
 public class MySQLMessage {

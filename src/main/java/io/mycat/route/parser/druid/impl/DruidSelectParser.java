@@ -393,8 +393,15 @@ public class DruidSelectParser extends DefaultDruidParser {
 		return map;
 	}
 
-	private void tryRoute(SchemaConfig schema, RouteResultset rrs, LayerCachePool cachePool) throws SQLNonTransientException {
-		if(rrs.isFinishedRoute())
+	/**
+	 * 这个方法在执行route逻辑
+	 * 
+	 * @param schema
+	 * @param rrs
+	 * @param cachePool
+	 * @throws SQLNonTransientException
+	 */
+	private void tryRoute(SchemaConfig schema, RouteResultset rrs, LayerCachePool cachePool) throws SQLNonTransientException {		if(rrs.isFinishedRoute())
 		{
 			return;//避免重复路由
 		}
@@ -407,6 +414,7 @@ public class DruidSelectParser extends DefaultDruidParser {
 		}
 //		RouterUtil.tryRouteForTables(schema, ctx, rrs, true, cachePool);
 		SortedSet<RouteResultsetNode> nodeSet = new TreeSet<RouteResultsetNode>();
+		// yzy： 如果一个语句涉及的表都是全局表，则isAllGlobalTable = true
 		boolean isAllGlobalTable = RouterUtil.isAllGlobalTable(ctx, schema);
 		for (RouteCalculateUnit unit : ctx.getRouteCalculateUnits()) {
 			RouteResultset rrsTmp = RouterUtil.tryRouteForTables(schema, ctx, unit, rrs, true, cachePool);
@@ -421,7 +429,7 @@ public class DruidSelectParser extends DefaultDruidParser {
 		}
 		
 		if(nodeSet.size() == 0) {
-
+		    // 这个地方在处理特定的查询，例如infomation_schema。这种表，一般是不会配置分片的
             Collection<String> stringCollection= ctx.getTableAliasMap().values() ;
             for (String table : stringCollection)
             {

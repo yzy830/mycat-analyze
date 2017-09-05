@@ -37,6 +37,7 @@ public class DefaultDruidParser implements DruidParser {
 	 */
 	protected DruidShardingParseInfo ctx;
 	
+	// 表原名与别名映射,原名中已经去掉了schema
 	private Map<String,String> tableAliasMap = new HashMap<String,String>();
 
 	private List<Condition> conditions = new ArrayList<Condition>();

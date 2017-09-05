@@ -29,6 +29,8 @@ import java.util.regex.Pattern;
 import io.mycat.route.parser.util.ParseUtil;
 
 /**
+ * 解析语句类型，包括select/update/begin/commit等
+ * 
  * @author mycat
  */
 public final class ServerParse {
@@ -53,6 +55,9 @@ public final class ServerParse {
 	public static final int KILL_QUERY = 16;
 	public static final int HELP = 17;
 	public static final int MYSQL_CMD_COMMENT = 18;
+	/**
+	 * 只有一个语句全部都是注释时，才会返回这一项
+	 */
 	public static final int MYSQL_COMMENT = 19;
 	public static final int CALL = 20;
 	public static final int DESCRIBE = 21;
@@ -66,6 +71,12 @@ public final class ServerParse {
     private static final  Pattern pattern = Pattern.compile("(load)+\\s+(data)+\\s+\\w*\\s*(infile)+",Pattern.CASE_INSENSITIVE);
     private static final  Pattern callPattern = Pattern.compile("\\w*\\;\\s*\\s*(call)+\\s+\\w*\\s*",Pattern.CASE_INSENSITIVE);
 
+    /**
+     * 根据sql语句，解析命令类型，例如SELECT、INSERT等。强行匹配，需要非常熟悉SQL的人才能写得出来，但是容易存在漏洞，可能导致某些SQL语句或者语句组合不被识别
+     * 
+     * @param stmt
+     * @return
+     */
     public static int parse(String stmt) {
 		int length = stmt.length();
 		//FIX BUG FOR SQL SUCH AS /XXXX/SQL
@@ -132,13 +143,13 @@ public final class ServerParse {
 					return rt;
 				}
 				continue;
-				case 'M':
-				case 'm':
-					rt = migrateCheck(stmt, i);
-					if (rt != OTHER) {
-						return rt;
-					}
-					continue;
+			case 'M':
+			case 'm':
+				rt = migrateCheck(stmt, i);
+				if (rt != OTHER) {
+					return rt;
+				}
+				continue;
 			case 'R':
 			case 'r':
 				rt = rCheck(stmt, i);

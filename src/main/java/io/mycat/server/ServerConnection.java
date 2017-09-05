@@ -45,6 +45,12 @@ import io.mycat.util.SplitUtil;
 import io.mycat.util.TimeUtil;
 
 /**
+ * {@code ServerConnection}代表mycat和客户端的连接。
+ * 
+ * <p>
+ * 除了用于数据交互以外，这个类还包装了一些session级的信息，例如schema(use schema_name时设置)、autocommit(set auto_commit时设置)
+ * </p>
+ * 
  * @author mycat
  */
 public class ServerConnection extends FrontendConnection {

@@ -4,7 +4,7 @@
     <!-- 给schema设置dataNode，可以在 -->
     <schema name="mycat" checkSQLschema="true" sqlMaxLimit="100" dataNode="dn1">
         <!-- user不分片 -->
-        <table name="user" dataNode="dn1" ruleRequired="false" autoIncrement="true" primaryKey="user_id">
+        <table name="user" dataNode="dn2" ruleRequired="false" autoIncrement="true" primaryKey="user_id">
             
         </table>
         <table name="pay" dataNode="dn1, dn2" rule="mycat_pay_rule" primaryKey="pay_id">
@@ -33,7 +33,6 @@
         dbDriver="native" minCon="10" maxCon="100">
         <heartbeat>select 1</heartbeat>
         <writeHost host="master" user="pxsjuser" password="pxsj_123" url="192.168.31.242:3306">
-            
         </writeHost>
     </dataHost>
     <dataHost name="host249" dbType="mysql" writeType="0" balance="0" 

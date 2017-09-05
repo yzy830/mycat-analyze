@@ -49,6 +49,8 @@ import io.mycat.net.mysql.QuitPacket;
 import io.mycat.net.mysql.Reply323Packet;
 
 /**
+ * MySQL数据源实现，重写了{@link #createNewConnection(ResponseHandler, String)}方法，使用{@link MySQLConnectionFactory}创建真实后端连接
+ * 
  * @author mycat
  */
 public class MySQLDataSource extends PhysicalDatasource {
