@@ -74,6 +74,12 @@ public class BufferUtil {
         writeLong(buffer, Double.doubleToLongBits(d));
     }
 
+    /**
+     * 根据mysql协议，将长度信息写入buffer中
+     * 
+     * @param buffer
+     * @param l
+     */
     public static final void writeLength(ByteBuffer buffer, long l) {
         if (l < 251) {
             buffer.put((byte) l);
@@ -119,6 +125,47 @@ public class BufferUtil {
         }
     }
 
+    /**
+     * 这个length的计算是按照mysql协议计算的消息体长度值 = 二进制长度编码 + 数据长度
+     * <p>
+     * 二进制长度编码方式如下
+     * <table>
+     *  <tr>
+     *      <th>第一个字节值</th>
+     *      <th>后续字节数</th>
+     *      <th>长度值说明</th>
+     *  </tr>
+     *  <tr>
+     *      <td>0-255</td>
+     *      <td>0</td>
+     *      <td>第一个字节表示数据长度</td>
+     *  </tr>
+     *  <tr>
+     *      <td>251</td>
+     *      <td>0</td>
+     *      <td>长度为0</td>
+     *  </tr>
+     *  <tr>
+     *      <td>252</td>
+     *      <td>2</td>
+     *      <td>后续两个字节表示长度，长度小于2^16(0x10000)</td>
+     *  </tr>
+     *  <tr>
+     *      <td>253</td>
+     *      <td>3</td>
+     *      <td>后续三个字节表示长度，长度小于2^24(0x1000000)</td>
+     *  </tr>
+     *  <tr>
+     *      <td>254</td>
+     *      <td>4</td>
+     *      <td>后续四个字节表示长度，长度小于2^32(0x100000000)</td>
+     *  </tr>
+     * </table>
+     * </p>
+     * 
+     * @param src
+     * @return
+     */
     public static final int getLength(long length) {
         if (length < 251) {
             return 1;
@@ -131,6 +178,47 @@ public class BufferUtil {
         }
     }
 
+    /**
+     * 这个length的计算是按照mysql协议计算的消息体长度值 = 二进制长度编码 + 数据长度
+     * <p>
+     * 二进制长度编码方式如下
+     * <table>
+     *  <tr>
+     *      <th>第一个字节值</th>
+     *      <th>后续字节数</th>
+     *      <th>长度值说明</th>
+     *  </tr>
+     *  <tr>
+     *      <td>0-255</td>
+     *      <td>0</td>
+     *      <td>第一个字节表示数据长度</td>
+     *  </tr>
+     *  <tr>
+     *      <td>251</td>
+     *      <td>0</td>
+     *      <td>长度为0</td>
+     *  </tr>
+     *  <tr>
+     *      <td>252</td>
+     *      <td>2</td>
+     *      <td>后续两个字节表示长度，长度小于2^16(0x10000)</td>
+     *  </tr>
+     *  <tr>
+     *      <td>253</td>
+     *      <td>3</td>
+     *      <td>后续三个字节表示长度，长度小于2^24(0x1000000)</td>
+     *  </tr>
+     *  <tr>
+     *      <td>254</td>
+     *      <td>4</td>
+     *      <td>后续四个字节表示长度，长度小于2^32(0x100000000)</td>
+     *  </tr>
+     * </table>
+     * </p>
+     * 
+     * @param src
+     * @return
+     */
     public static final int getLength(byte[] src) {
         int length = src.length;
         if (length < 251) {

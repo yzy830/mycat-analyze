@@ -10,6 +10,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
+ * <p>
+ * {@code ResultSetMemoryPool}并不是正式管理内存的分配和释放，而是管理每个连接的内存配额。
+ * </p>
+ * 
+ * <p>
+ * 管理的核心思想是，隔离。限制每个连接可使用的内存是 maxPoolSize / N (N是连接数量)，避免一个连接将资源耗尽。
+ * </p>
+ * 
+ * <p>
+ * 另外，还保证每个连接至少可以获得  maxPoolSize / (8 * N)。如果不能得到，就阻塞等待其他连接释放资源。
+ * 这样可以避免老连接占用大量内存，而导致新连接内存溢出的情况
+ * </p>
+ * 
  * Created by zagnix on 2016/6/6.
  */
 public class ResultSetMemoryPool extends MemoryPool {
@@ -43,6 +56,10 @@ public class ResultSetMemoryPool extends MemoryPool {
         return memoryForConnection;
     }
     /**
+     * <p>
+     * 维护了所有connection的内存消耗。从connection id可以查询到对应的内存消耗
+     * </p>
+     * 
      * Map from taskAttemptId -> memory consumption in bytes
      */
     private ConcurrentHashMap<Long,Long> memoryForConnection = new ConcurrentHashMap<Long,Long>();
@@ -73,6 +90,12 @@ public class ResultSetMemoryPool extends MemoryPool {
 
 
     /**
+     * <p>
+     * 尝试分配numBytes个字节。如果连接最多占据 1/N的内存。如果分配的内存不足1/(8 * N)，则会导致线程阻塞，这样做的目的是避免老连接占用过多内存，而导致
+     * 新连接频繁重试或者频繁抛出内存溢出异常。
+     * 这个方法返回0，则表示，无法再给这个连接分配内存。
+     * </p>
+     * 
      * Try to acquire up to `numBytes` of memory for the given task and return the number of bytes
      * obtained, or 0 if none can be allocated.
      *
@@ -103,6 +126,10 @@ public class ResultSetMemoryPool extends MemoryPool {
                 long curMem = memoryForConnection.get(connAttemptId);
 
                 long maxPoolSize = poolSize();
+                /* 
+                 * 这里体现了线程隔离思想。每个线程使用的内存，最多达到 1/N * maxPoolSize，这里N是连接数量。 
+                 * 避免一个线程占据太多资源，拖垮整个服务
+                 * */
                 long maxMemoryPerTask = maxPoolSize / numActiveConns;
                 long minMemoryPerTask = poolSize() / (8 * numActiveConns);
 

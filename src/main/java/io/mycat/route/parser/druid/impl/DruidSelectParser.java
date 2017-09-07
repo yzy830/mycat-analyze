@@ -299,6 +299,7 @@ public class DruidSelectParser extends DefaultDruidParser {
 			SQLSelectGroupByClause groupByClause = mysqlSelectQuery.getGroupBy();
 			// Modified by winbill, 20160614, do NOT include having clause when routing to multiple nodes
 			if(groupByClause != null && groupByClause.getHaving() != null && isRoutMultiNode(schema,rrs)){
+			    // 如果是多点路由，并且有having，则去掉having。因为，多点聚合的结果与当店聚合的结果可能是不同的
 				groupByClause.setHaving(null);
 			}
 			
@@ -401,8 +402,8 @@ public class DruidSelectParser extends DefaultDruidParser {
 	 * @param cachePool
 	 * @throws SQLNonTransientException
 	 */
-	private void tryRoute(SchemaConfig schema, RouteResultset rrs, LayerCachePool cachePool) throws SQLNonTransientException {		if(rrs.isFinishedRoute())
-		{
+	private void tryRoute(SchemaConfig schema, RouteResultset rrs, LayerCachePool cachePool) throws SQLNonTransientException {		
+	    if(rrs.isFinishedRoute()) {
 			return;//避免重复路由
 		}
 

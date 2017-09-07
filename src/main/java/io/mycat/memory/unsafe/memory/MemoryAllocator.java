@@ -17,6 +17,10 @@
 
 package io.mycat.memory.unsafe.memory;
 
+/**
+ * 抽象内存分配接口接口，统一堆内和堆外内存分配
+ *
+ */
 public interface MemoryAllocator {
 
   /**

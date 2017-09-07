@@ -14,6 +14,18 @@ import java.util.BitSet;
 import java.util.HashSet;
 
 /** 
+ * <p>
+ * 管理一个线程的内存分页，内部使用MemoryManager，管理全局配额。
+ * </p>
+ * 
+ * <p>
+ * 这里的内存分页和操作系统的内存分页不同，页面大小是不固定的，根据传入的数据需求决定。
+ * </p>
+ * 
+ * <p>
+ * 这个类的主要工作是，将一个page序号信息和page内存段的地址信息，压缩为了一个long型地址，统一了off heap和on heap的处理
+ * </p>
+ * 
  * Modify by zagnix 
  * Manages the memory allocated by an individual thread.
  * <p>
@@ -49,6 +61,12 @@ public class DataNodeMemoryManager {
   private static final int PAGE_TABLE_SIZE = 1 << PAGE_NUMBER_BITS;
 
   /**
+   * <p>
+   * 这里有一个隐蔽的考虑，java对象的最大内存长度是long[2^31-1](因为数组的length是int类型，最多能表示这么多，从原理上说，可以手动创建一个大于
+   * 这个长度的对象，但是就算使用代码生成这样的一个对象，也可能会导致占据太多的元数据空间。因此，现实的做法是分配一个数组。但无论是基础类型数组还是对象数组，占据
+   * 的最大连续空间大小也只能达到long[2^31-1])
+   * </p>
+   * 
    * Maximum supported data page size (in bytes). In principle, the maximum addressable page size is
    * (1L &lt;&lt; OFFSET_BITS) bytes, which is 2+ petabytes. However, the on-heap allocator's
    * maximum page size is limited by the maximum amount of data that can be stored in a long[]
@@ -232,8 +250,11 @@ public class DataNodeMemoryManager {
     }
 
     /**
-     * 这里spill到磁盘中，释放内存空间
+     * 这里spill到磁盘中，释放内存空间。
      */
+    /*
+     * 和华为的quota一个处理方法，先分配配额，如果分配到了，再分配页面
+     * */
     long acquired = 0;
     try {
       acquired = acquireExecutionMemory(size,tungstenMemoryMode, consumer);
@@ -248,6 +269,7 @@ public class DataNodeMemoryManager {
     final int pageNumber;
 
     synchronized (this) {
+      // 用一个BitSet来维护页面分配，可以用于调试，但是从性能来讲，可以使用一个原子变量
       pageNumber = allocatedPages.nextClearBit(0);
       if (pageNumber >= PAGE_TABLE_SIZE) {
         releaseExecutionMemory(acquired, tungstenMemoryMode, consumer);
@@ -305,6 +327,16 @@ public class DataNodeMemoryManager {
   }
 
   /**
+   * <p>
+   * 这个方法，将一个内存分页的pageNum和物理地址offsetInPage(对于off heap，offsetInPage是真实物理地址；对于on heap，offsetInPage是
+   * long[]中，元素的物理偏移，并非index，而是通过_UNSAFE#arrayBaseOffset获得地址偏移)，编码到一个long型中。
+   * </p>
+   * 
+   * <p>
+   * 对于offset heap，offsetInPage是一个64位物理地址，因此这里减去baseOffset，将信息压缩到31位范围内(offset最多可以达到51位，但是
+   * 为了适应on heap中long[]的长度，讲长度限制到了31位)
+   * </p>
+   * 
    * Given a memory page and offset within that page, encode this address into a 64-bit long.
    * This address will remain valid as long as the corresponding page has not been freed.
    *
@@ -342,6 +374,10 @@ public class DataNodeMemoryManager {
   }
 
   /**
+   * <p>
+   * 这个方法返回的不是MemoryBlock，而是{@link MemoryBlock#getBaseObject()}，因此对off heap page，总是返回null
+   * </p>
+   * 
    * Get the page associated with an address encoded by
    * {@link DataNodeMemoryManager#encodePageNumberAndOffset(MemoryBlock, long)}
    */

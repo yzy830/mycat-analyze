@@ -3,6 +3,10 @@ package io.mycat.memory.unsafe.memory.mm;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
+ * <p>
+ * 抽象内存池。监管维护一个_poolSize变量，跟踪内存池大小
+ * </p>
+ * 
  * Manages bookkeeping for an adjustable-sized region of memory. This class is internal to
  * the [[MemoryManager]]. See subclasses for more details.
  *

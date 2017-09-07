@@ -20,6 +20,15 @@ package io.mycat.memory.unsafe.memory;
 import javax.annotation.Nullable;
 
 /**
+ * <p>
+ * {@code MemoryLocation}是对地址的抽象。这个抽象既可以表示一个堆上的对象(此时offset是JVM对象中数据部分的偏移量)，
+ * 也可以表示一个对外内存，此时offset表示一个堆外内存的地址
+ * </p>
+ * 
+ * <p>
+ * PS: java分配的内存，按照平台指针长度对齐，在64位平台上，按照8字节对齐
+ * </p>
+ * 
  * A memory location. Tracked either by a memory address (with off-heap allocation),
  * or by an offset from a JVM object (in-heap allocation).
  */

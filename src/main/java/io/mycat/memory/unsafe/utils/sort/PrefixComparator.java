@@ -18,6 +18,10 @@
 package io.mycat.memory.unsafe.utils.sort;
 
 /**
+ * <p>
+ * 只比较前8个字节，因此叫做前缀比较器。对于数值类型，一般是没有问题，但是字符串呢
+ * </p>
+ * 
  * Compares 8-byte key prefixes in prefix sort. Subclasses may implement type-specific
  * comparisons, such as lexicographic comparison for strings.
  */

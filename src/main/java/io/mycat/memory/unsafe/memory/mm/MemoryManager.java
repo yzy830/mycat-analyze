@@ -8,6 +8,15 @@ import io.mycat.memory.unsafe.utils.MycatPropertyConf;
 import javax.annotation.concurrent.GuardedBy;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * {@code MemoryManager}封装了{@link ResultSetMemoryPool}用于按线程管理内存配额(隔离连接的内存分配)
+ * 
+ * <p>
+ * 另外一个关键接口是{@link #tungstenMemoryAllocator()}，根据配置返回{@link MemoryAllocator#UNSAFE}
+ * 或者{@link MemoryAllocator#HEAP}。默认情况下，使用{@link MemoryAllocator#UNSAFE}，即堆外内存
+ * </p>
+ *
+ */
 public abstract class MemoryManager {
 
   private MycatPropertyConf conf;
@@ -34,7 +43,16 @@ public abstract class MemoryManager {
     offHeapExecutionMemoryPool.incrementPoolSize(offHeapExecutionMemory);
   }
 
-  protected abstract long acquireExecutionMemory(long numBytes,long taskAttemptId,MemoryMode memoryMode) throws InterruptedException;
+  /**
+   * 这个接口根据内存模式来分配内存配额
+   * 
+ * @param numBytes
+ * @param taskAttemptId
+ * @param memoryMode
+ * @return
+ * @throws InterruptedException
+ */
+protected abstract long acquireExecutionMemory(long numBytes,long taskAttemptId,MemoryMode memoryMode) throws InterruptedException;
 
   /**
    * Release numBytes of execution memory belonging to the given task.
@@ -99,6 +117,16 @@ public void releaseExecutionMemory(long numBytes, long taskAttemptId, MemoryMode
   }
 
   /**
+   * <p>
+   * 这个方法待优化啊。这个方法的计算不少，应该首先看mycat.buffer.pageSize是否已经配置，如果配置了，直接返回；如果
+   * 没有配置，则进一步计算。
+   * </p>
+   * 
+   * <p>
+   * 并且这里{@link #onHeapExecutionMemoryPool}和{@link #offHeapExecutionMemoryPool}的poolSize都是固定的，因此就算计算，
+   * 也保存下来
+   * </p>
+   * 
    * The default page size, in bytes.
    *
    * If user didn't explicitly set "mycat.buffer.pageSize", we figure out the default value
@@ -139,6 +167,8 @@ public void releaseExecutionMemory(long numBytes, long taskAttemptId, MemoryMode
   }
 
   /**
+   * 获取内存分配器。内部根据配置返回堆内或者堆外内存分配器
+   * 
    * Allocates memory for use by Unsafe/Tungsten code.
    */
   public final MemoryAllocator tungstenMemoryAllocator() {

@@ -23,6 +23,10 @@ import io.mycat.memory.unsafe.array.ByteArrayMethods;
 import io.mycat.memory.unsafe.bitset.BitSetMethods;
 
 /**
+ * <p>
+ * UnsafeRow的辅助写入类
+ * </p>
+ * 
  * A helper class to write data into global row buffer using `UnsafeRow` format.
  *
  * It will remember the offset of row buffer which it starts to write, and move the cursor of row
@@ -58,6 +62,7 @@ public class UnsafeRowWriter {
     this.startingOffset = holder.cursor;
 
     // grow the global buffer to make sure it has enough space to write fixed-length data.
+    // 这个地方感觉有个bug，每次调用都会增长
     holder.grow(fixedSize);
     holder.cursor += fixedSize;
 

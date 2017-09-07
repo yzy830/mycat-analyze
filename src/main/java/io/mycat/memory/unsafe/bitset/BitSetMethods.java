@@ -21,6 +21,10 @@ package io.mycat.memory.unsafe.bitset;
 import io.mycat.memory.unsafe.Platform;
 
 /**
+ * <p>
+ * 提供一组方法，在原生内存或者在一个long[]对象上实现bitset
+ * </p>
+ * 
  * Methods for working with fixed-size uncompressed bitsets.
  *
  * We assume that the bitset data is word-aligned (that is, a multiple of 8 bytes in length).
@@ -82,6 +86,10 @@ public final class BitSetMethods {
   }
 
   /**
+   * <p>
+   * 返回从fromIndex开始，第一个被置位的下标
+   * </p>
+   * 
    * Returns the index of the first bit that is set to true that occurs on or after the
    * specified starting index. If no such bit exists then {@code -1} is returned.
    * <p>

@@ -28,11 +28,25 @@ public class MyCatMemory {
 	private static Logger LOGGER = Logger.getLogger(MyCatMemory.class);
 
 	public final  static double DIRECT_SAFETY_FRACTION  = 0.7;
+	/**
+	 * 这个参数在on heap模式下使用，给系统留一部分内存，创建小对象
+	 */
 	private final long systemReserveBufferSize;
-
+	/**
+     *页大小,对应MemoryBlock的大小，单位为M
+     */
 	private final long memoryPageSize;
+	/**
+     * DiskRowWriter写磁盘是临时写Buffer，单位为K。默认2K
+     */
 	private final long spillsFileBufferSize;
+	/**
+	 * 用于结果集处理的对外内存总体大小
+	 */
 	private final long resultSetBufferSize;
+	/**
+	 * 系统核数，非配置，来自java虚拟机Runtime
+	 */
 	private final int numCores;
 
 
@@ -46,6 +60,12 @@ public class MyCatMemory {
 	private final SystemConfig system;
 
 
+	/**
+	 * @param system
+	 * @param totalNetWorkBufferSize
+	 * @throws NoSuchFieldException
+	 * @throws IllegalAccessException
+	 */
 	public MyCatMemory(SystemConfig system,long totalNetWorkBufferSize) throws NoSuchFieldException, IllegalAccessException {
 
 		this.system = system;
@@ -76,6 +96,7 @@ public class MyCatMemory {
 
 		assert maxOnHeapMemory > 0;
 
+		/* 最大堆外内存使用量减去网络内存的使用量(默认情况下，网络内存全部使用对外内存)。这里有一个问题，为什么要减去两倍 */		
 		resultSetBufferSize =
 				(long)((Platform.getMaxDirectMemory()-2*totalNetWorkBufferSize)*DIRECT_SAFETY_FRACTION);
 

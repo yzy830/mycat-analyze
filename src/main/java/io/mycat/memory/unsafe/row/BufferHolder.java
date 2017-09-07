@@ -21,6 +21,10 @@ package io.mycat.memory.unsafe.row;
 import io.mycat.memory.unsafe.Platform;
 
 /**
+ * <p>
+ * {@code BufferHolder}用于管理UnsafeRow，便于自动扩展UnsafeRow的长度
+ * </p>
+ * 
  * A helper class to manage the data buffer for an unsafe row.  The data buffer can grow and
  * automatically re-point the unsafe row to it.
  *
@@ -36,7 +40,10 @@ import io.mycat.memory.unsafe.Platform;
  */
 public class BufferHolder {
   public byte[] buffer;
-  public int cursor = Platform.BYTE_ARRAY_OFFSET;
+  /**
+ * 用于辅助写入非基本类型，记录当前应该写入的偏移量
+ */
+public int cursor = Platform.BYTE_ARRAY_OFFSET;
 
 
   private final UnsafeRow row;

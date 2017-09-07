@@ -25,6 +25,10 @@ package io.mycat.sqlengine.mpp;
 
 import java.io.Serializable;
 
+/**
+ * 列元数据信息，包括列的index和列类型。通过select语句响应协议包的field meta数据构造
+ *
+ */
 public class ColMeta implements Serializable{
 	public static final int COL_TYPE_DECIMAL = 0;
 	public static final int COL_TYPE_INT = 1;

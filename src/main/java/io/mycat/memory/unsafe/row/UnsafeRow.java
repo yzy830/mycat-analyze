@@ -33,6 +33,23 @@ import java.nio.ByteBuffer;
 
 
 /**
+ * <p>
+ * UnsafeRow使用原生内存或者直接操作数组对象的数据段内存，来存储数据信息。
+ * </p>
+ * 
+ * <p>
+ * 内存中，数据分为三段，[null bit set] [values] [variable length portion]
+ * <ol>
+ *   <li>null bit set: 采用8字节对齐，每一位表示一个字段</li>
+ *   <li>
+ *      values: 存储每个字段的值，每个字段占用8个字节。非基础类型或者可变长度类型，在variable length portion段存放。
+ *              在values段只存放一个相对偏移量(与{@link #baseOffset}的相对偏移量)。这个偏移量的格式是：高32位存放
+ *              偏移量，低32位存放长度
+ *   </li>
+ *   <li>variable length portion: 存放非基本类型和可变类型</li>
+ * </ol>
+ * <p>
+ * 
  * Modify by zagnix 
  * An Unsafe implementation of Row which is backed by raw memory instead of Java objects.
  *
@@ -55,7 +72,13 @@ public final class UnsafeRow extends MySQLPacket {
   // Static methods
   //////////////////////////////////////////////////////////////////////////////
 
-  public static int calculateBitSetWidthInBytes(int numFields) {
+  /**
+   * 计算字段的bit数，按照64位取整。最后应该是用long表示
+   * 
+ * @param numFields
+ * @return
+ */
+public static int calculateBitSetWidthInBytes(int numFields) {
     return ((numFields + 63)/ 64) * 8;
   }
 
@@ -159,7 +182,15 @@ public final class UnsafeRow extends MySQLPacket {
     throw new UnsupportedOperationException();
   }
 
-  public void setInt(int ordinal, int value) {
+  /**
+   * 这一组setInt/getInt等方法，是用来设置/获取指定序号field的值
+   * 
+ * @param ordinal
+ *          字段序号
+ * @param value
+ *          值
+ */
+public void setInt(int ordinal, int value) {
     assertIndexIsValid(ordinal);
     setNotNullAt(ordinal);
     Platform.putInt(baseObject, getFieldOffset(ordinal), value);
@@ -339,6 +370,7 @@ public final class UnsafeRow extends MySQLPacket {
    */
   public void writeToStream(OutputStream out, byte[] writeBuffer) throws IOException {
     if (baseObject instanceof byte[]) {
+        // 这个地方应该是一个bug，应该是使用baseOffste - Plageform.BYTE_ARRAY_OFFSET计算数据在数组中的偏移下标
       int offsetInByteArray = (int) (Platform.BYTE_ARRAY_OFFSET - baseOffset);
       out.write((byte[]) baseObject, offsetInByteArray, sizeInBytes);
     } else {
