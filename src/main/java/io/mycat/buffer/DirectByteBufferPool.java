@@ -66,9 +66,33 @@ public class DirectByteBufferPool implements BufferPool{
         return null;
     }
 
+    /**
+     * 分配指定大小的ByteBuffer。
+     * 
+     * <p>
+     * 这个方法有待优化。每次取遍历page来分配空间，浪费CPU。应该在preAllocatedPage.incrementAndGet() % allPages.length
+     * 上分配内存，如果分配失败，再重试。
+     * <p>
+     * 
+     * <p>
+     * {@link ByteBufferPage#allocatChunk(int)}在分配时，如果遇到并发，应该重试，不应该直接失败。
+     * </p>
+     * 
+     * <p>
+     * 满足以上两点，才能快速分配空间
+     * </p>
+     * */
     public ByteBuffer allocate(int size) {
        final int theChunkCount = size / chunkSize + (size % chunkSize == 0 ? 0 : 1);
         int selectedPage =  prevAllocatedPage.incrementAndGet() % allPages.length;
+        /*
+         * 这里的两条语句应该调转顺序
+         * ByteBuffer byteBuf = allocateBuffer(theChunkCount, selectedPage, allPages.length);
+         * if (byteBuf == null) {
+         *     byteBuf = allocateBuffer(theChunkCount, 0, selectedPage);
+         * }
+         * 按照现在的写法，会始终先分配page 0上的空间。 
+         * */
         ByteBuffer byteBuf = allocateBuffer(theChunkCount, 0, selectedPage);
         if (byteBuf == null) {
             byteBuf = allocateBuffer(theChunkCount, selectedPage, allPages.length);
@@ -96,6 +120,7 @@ public class DirectByteBufferPool implements BufferPool{
         boolean recycled = false;
         DirectBuffer thisNavBuf = (DirectBuffer) theBuf;
         int chunkCount = theBuf.capacity() / chunkSize;
+        // 在使用slice方法生成新的ByteBuffer时，新的ByteBuffer的attachment记录了原来的ByteBuffer
         DirectBuffer parentBuf = (DirectBuffer) thisNavBuf.attachment();
         int startChunk = (int) ((thisNavBuf.address() - parentBuf.address()) / this.chunkSize);
         for (int i = 0; i < allPages.length; i++) {
@@ -146,6 +171,9 @@ public class DirectByteBufferPool implements BufferPool{
         return size();
     }
 
+    /**
+     * 这个方法算错了把。应该是pageSize * pageCount。
+     * */
     public long size(){
         return  (long) pageSize * chunkSize * pageCount;
     }

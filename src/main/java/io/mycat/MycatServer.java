@@ -305,11 +305,11 @@ public class MycatServer {
 		// startup processors
 		int threadPoolSize = system.getProcessorExecutor();
 		processors = new NIOProcessor[processorCount];
-		// a page size
+		// a page size，默认情况下，是2048KB
 		int bufferPoolPageSize = system.getBufferPoolPageSize();
-		// total page number 
+		// total page number，默认情况下，是20 * processorCount
 		short bufferPoolPageNumber = system.getBufferPoolPageNumber();
-		//minimum allocation unit
+		//minimum allocation unit，默认情况下是4KB
 		short bufferPoolChunkSize = system.getBufferPoolChunkSize();
 		
 		int socketBufferLocalPercent = system.getProcessorBufferLocalPercent();
