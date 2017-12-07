@@ -109,6 +109,9 @@ public class DirectByteBufferPool implements BufferPool{
         return byteBuf;
     }
 
+    /**
+     * 释放buffer
+     * */
     public void recycle(ByteBuffer theBuf) {
     	if(!(theBuf instanceof DirectBuffer)){
     		theBuf.clear();
@@ -123,6 +126,9 @@ public class DirectByteBufferPool implements BufferPool{
         // 在使用slice方法生成新的ByteBuffer时，新的ByteBuffer的attachment记录了原来的ByteBuffer
         DirectBuffer parentBuf = (DirectBuffer) thisNavBuf.attachment();
         int startChunk = (int) ((thisNavBuf.address() - parentBuf.address()) / this.chunkSize);
+        /*
+         * 这里每次遍历allPages来尝试释放不好。最好是写一个CopyOnWriteMap来做映射
+         * */
         for (int i = 0; i < allPages.length; i++) {
             if ((recycled = allPages[i].recycleBuffer((ByteBuffer) parentBuf, startChunk, chunkCount) == true)) {
                 break;

@@ -418,6 +418,10 @@ public abstract class FrontendConnection extends AbstractConnection {
 		writeErrMessage(ErrorCode.ER_UNKNOWN_COM_ERROR, "Unknown command");
 	}
 
+	/**
+	 * register方法主要是，根据MYSQL的登陆认证交互报文，构造了协议包，发送给客户端
+	 * 
+	 * */
 	@Override
 	public void register() throws IOException {
 		if (!isClosed.get()) {

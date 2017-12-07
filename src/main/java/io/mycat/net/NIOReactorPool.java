@@ -24,6 +24,11 @@ public class NIOReactorPool {
 	/**
 	 * 轮询选择Reactor，实现负载均衡
 	 * 
+	 * <p>
+	 * NIOReactorPool在ManagerAcceptor/ServerAcceptor/NIOAcceptor间共享，因此，这里肯定有并发问题，但是
+	 * 在大量的操作中，也可能是负载均衡的
+	 * </p>
+	 * 
 	 * @return
 	 */
 	public NIOReactor getNextReactor() {

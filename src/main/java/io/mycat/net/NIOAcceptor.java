@@ -70,7 +70,7 @@ public final class NIOAcceptor extends Thread  implements SocketAcceptor{
 		// 而设置了这个标志之后，则允许再次绑定到这个socket address上
 		serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
 		serverChannel.setOption(StandardSocketOptions.SO_RCVBUF, 1024 * 16 * 2);
-		// backlog=100
+		// backlog=100，backlog配置了全连接队列的大小
 		serverChannel.bind(new InetSocketAddress(bindIp, port), 100);
 		this.serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 		this.factory = factory;

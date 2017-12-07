@@ -169,6 +169,12 @@ public final class NIOReactor {
 			while ((c = registerQueue.poll()) != null) {
 				try {
 					((NIOSocketWR) c.getSocketWR()).register(selector);
+					/*
+					 * 应该把上面一条注册selector的代码写到AbstractConnection的register方法中
+                     * 现在AbstractConnection#register方法为空。
+					 * 
+					 * FrontConnection#register方法实现了mysql的协议，给客户端发送了登陆认证交互报文
+					 * */
 					c.register();
 				} catch (Exception e) {
 					c.close("register err" + e.toString());

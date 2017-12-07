@@ -354,12 +354,16 @@ public abstract class AbstractConnection implements NIOConnection {
 		for (;;) {
 			length = getPacketLength(readBuffer, offset);			
 			if (length == -1) {
-			    // 没能读取到足够的信息，将buffer空间压缩之后，直接退出等待下一次读取
+			    /* 没能读取到足够的信息，将buffer空间压缩之后，直接退出等待下一次读取 */
 				if (offset != 0) {
+				    // 这里还可以做一个判断，只在readBuffer没有剩余空间的时候，才压缩，避免不必要的数据搬移
 					this.readBuffer = compactReadBuffer(readBuffer, offset);
 				} else if (readBuffer != null && !readBuffer.hasRemaining()) {
-				    // readBuffer在ensureFreeSpaceOfReadBuffer方法中会适应包的大小增长。在这里，
-				    // 由于不知道包的大小，因此只能抛出异常
+				    /*
+				     * 这个路径应该不会走到。当getPacketLength返回-1时，说明读取的数据量不够解析消息头；而这里，有
+				     * 说明buffer已经满了，并且offset == 0。那么，说明buffer的大小不足4个字节。除非配置错误，否则
+				     * 不可能走到这个路径
+				     * */
 					throw new RuntimeException( "invalid readbuffer capacity ,too little buffer size " 
 							+ readBuffer.capacity());
 				}
@@ -367,7 +371,7 @@ public abstract class AbstractConnection implements NIOConnection {
 			}
 
 			if (position >= offset + length && readBuffer != null) {
-				// yzy: 读取到了完整的业务数据，将数据提取出来
+				/* yzy: 读取到了完整的业务数据，将数据提取出来。因为buffer中，存在多个报文，因此不能使用flip，直接操作position*/
 				// handle this package
 				readBuffer.position(offset);				
 				byte[] data = new byte[length];
@@ -665,6 +669,7 @@ public abstract class AbstractConnection implements NIOConnection {
 			int length = buffer.get(offset) & 0xff;
 			length |= (buffer.get(++offset) & 0xff) << 8;
 			length |= (buffer.get(++offset) & 0xff) << 16;
+			// 报文头的报文长度，没有包含报文头。这里加上报文头的长度，得到整个报文的大小
 			return length + headerSize;
 		}
 	}

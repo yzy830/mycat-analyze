@@ -363,6 +363,7 @@ public class MycatServer {
 		listeningExecutorService = MoreExecutors.listeningDecorator(businessExecutor);
 
 		for (int i = 0; i < processors.length; i++) {
+		    // 现在buffer pool和businessExecutor都是用的统一一个，并没有按核隔离
 			processors[i] = new NIOProcessor("Processor" + i, bufferPool,
 					businessExecutor);
 		}
