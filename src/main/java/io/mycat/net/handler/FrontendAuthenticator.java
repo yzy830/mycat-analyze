@@ -185,6 +185,9 @@ public class FrontendAuthenticator implements NIOHandler {
 
     protected void success(AuthPacket auth) {
         source.setAuthenticated(true);
+        /*
+         * 记录连接信息：用户名、选择的schema、字符集
+         * */
         source.setUser(auth.user);
         source.setSchema(auth.database);
         source.setCharsetIndex(auth.charsetIndex);
