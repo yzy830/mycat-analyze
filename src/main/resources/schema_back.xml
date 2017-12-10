@@ -1,0 +1,268 @@
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+
+        <schema name="vcity_user" checkSQLschema="true" sqlMaxLimit="50000000">
+                    <table name="MYCAT_SEQUENCE" dataNode="dn1" type="global"/>
+        
+                <table name="t_b_region" primaryKey="id" type="global" dataNode="dn1,dn2,dn3,dn4"/>
+                <table name="t_b_region_city" primaryKey="id" type="global" dataNode="dn1,dn2,dn3,dn4"/>
+                <table name="t_b_region_county" primaryKey="id" type="global" dataNode="dn1,dn2,dn3,dn4"/>
+                <table name="t_b_region_province" primaryKey="id" type="global" dataNode="dn1,dn2,dn3,dn4"/>
+                <table name="t_c_job" primaryKey="job_id" type="global" dataNode="dn1,dn2,dn3,dn4"/>
+                <table name="t_c_label" primaryKey="label_id" type="global" dataNode="dn1,dn2,dn3,dn4"/>
+                <table name="t_c_profession" primaryKey="profession_id" type="global" dataNode="dn1,dn2,dn3,dn4"/>
+                <table name="t_c_specialties" primaryKey="specialties_id" type="global" dataNode="dn1,dn2,dn3,dn4"/>
+                <table name="t_d_user_whitelist" primaryKey="id" type="global" dataNode="dn1,dn2,dn3,dn4"/>
+
+                <table name="t_d_friend_req" primaryKey="frd_req_id" autoIncrement="true" dataNode="dn1,dn2,dn3,dn4" rule="t_r_user_id"/>
+                <table name="t_d_user_addr" primaryKey="user_addr_id" autoIncrement="true" dataNode="dn1,dn2,dn3,dn4" rule="t_r_user_id"/>
+                <table name="t_d_user_company" primaryKey="user_company_id" autoIncrement="true" dataNode="dn1,dn2,dn3,dn4" rule="t_r_user_id"/>
+                <table name="t_d_user_friend" primaryKey="user_friend_id" autoIncrement="true" dataNode="dn1,dn2,dn3,dn4" rule="t_r_user_id"/>
+                <table name="t_d_user_group" primaryKey="user_group_id" autoIncrement="true" dataNode="dn1,dn2,dn3,dn4" rule="t_r_user_id"/>
+                <table name="t_d_user_interest" primaryKey="user_interest_id" autoIncrement="true" dataNode="dn1,dn2,dn3,dn4" rule="t_r_user_id"/>
+                <table name="t_d_user_model" primaryKey="user_id" dataNode="dn1,dn2,dn3,dn4" rule="t_r_user_id"/>
+                <table name="t_d_user_online" primaryKey="user_online_id" autoIncrement="true" dataNode="dn1,dn2,dn3,dn4" rule="t_r_user_id"/>
+                <table name="t_d_user_shop" primaryKey="user_shop_id" autoIncrement="true" dataNode="dn1,dn2,dn3,dn4" rule="t_r_user_id"/>
+                <table name="t_d_user_vcity" primaryKey="user_id" dataNode="dn1,dn2,dn3,dn4" rule="t_r_user_id"/>
+                <table name="t_d_shoppoing_cart" primaryKey="shopping_cart_id" autoIncrement="true" dataNode="dn1,dn2,dn3,dn4" rule="t_r_user_id"/>
+                <table name="t_d_user_coupon" primaryKey="user_coupon_id" dataNode="dn1,dn2,dn3,dn4" rule="t_r_user_id"/>
+                <table name="t_d_user_coupon_consume" primaryKey="user_coupon_consume_id" autoIncrement="true" dataNode="dn1,dn2,dn3,dn4" rule="t_r_user_id"/>
+        </schema>
+
+        <schema name="pxsj_ucenter" checkSQLschema="true" sqlMaxLimit="50000000">
+                <table name="MYCAT_SEQUENCE" dataNode="dn6" type="global"/>
+
+                <table name="t_d_user" primaryKey="user_id" dataNode="dn6,dn7,dn8,dn9" rule="t_r_user_id"/>
+                <table name="t_d_user_ban" primaryKey="user_ban_id" autoIncrement="true" dataNode="dn6,dn7,dn8,dn9" rule="t_r_user_id"/>
+                <table name="t_d_user_extra" primaryKey="user_extra_id" dataNode="dn6,dn7,dn8,dn9" rule="t_r_user_id"/>
+                <table name="t_d_user_statistic" primaryKey="user_statistic_id" dataNode="dn6,dn7,dn8,dn9" rule="t_r_user_id"/>
+                <table name="t_l_user_email" primaryKey="user_email_id" autoIncrement="true" dataNode="dn6,dn7,dn8,dn9" rule="t_r_user_id"/>
+                <table name="t_l_user_login" primaryKey="user_login_id" autoIncrement="true" dataNode="dn6,dn7,dn8,dn9" rule="t_r_user_id"/>
+                <table name="t_l_user_sms" primaryKey="user_sms_id" autoIncrement="true" dataNode="dn6,dn7,dn8,dn9" rule="t_r_user_id"/>
+        </schema>
+
+        <schema name="user_global" checkSQLschema="true" sqlMaxLimit="50000000" dataNode="dn5"></schema>
+         
+        <schema name="vcity_goods" checkSQLschema="true" sqlMaxLimit="50000000">
+                    <table name="MYCAT_SEQUENCE" dataNode="dn10" type="global"/>
+
+                <table name="t_c_biz_category" primaryKey="biz_category_id" type="global" dataNode="dn10,dn11,dn12,dn13"/>
+                <table name="t_c_goods_user_category" primaryKey="goods_user_category_id" type="global" dataNode="dn10,dn11,dn12,dn13"/>
+                <table name="t_c_user_category" primaryKey="user_category_id" type="global" dataNode="dn10,dn11,dn12,dn13"/>
+                <table name="t_d_category" primaryKey="category_id" type="global" dataNode="dn10,dn11,dn12,dn13"/>
+
+                <table name="t_d_goods" primaryKey="goods_id" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_d_goods_apply" primaryKey="goods_apply_id" autoIncrement="true" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_d_goods_apply_snapshot" primaryKey="goods_apply_id" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_d_attr_cust" primaryKey="attr_cust_id" autoIncrement="true" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_d_attr_cust_value" primaryKey="attr_cust_value_id" autoIncrement="true" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_d_category_cust" primaryKey="category_cust_id" autoIncrement="true" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_d_goods_sku" primaryKey="goods_sku_id" autoIncrement="true" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_d_goods_category_cust" primaryKey="goods_category_cust_id" autoIncrement="true" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_d_goods_details" primaryKey="goods_id" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_d_goods_extra" primaryKey="goods_id" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_d_goods_offline" primaryKey="goods_offline_id" autoIncrement="true" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_d_goods_photo" primaryKey="goods_photo_id" autoIncrement="true" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_d_goods_sku_detail" primaryKey="goods_sku_id" autoIncrement="true" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_d_goods_statistic" primaryKey="goods_id" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>   
+                <table name="t_d_order_log" primaryKey="order_log_id" autoIncrement="true" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>     
+                <table name="t_i_order_base" primaryKey="order_id" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+                <table name="t_r_goods_sales" primaryKey="goods_sales_sum_id" autoIncrement="true" dataNode="dn10,dn11,dn12,dn13" rule="t_r_shop_id"/>
+        </schema>
+     
+        <schema name="vcity_shop" checkSQLschema="true" sqlMaxLimit="50000000">
+                <table name="MYCAT_SEQUENCE" dataNode="dn14" type="global"/>
+        
+                <table name="t_b_bizcircle" primaryKey="bizcircle_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_b_bizcircle_photo" primaryKey="bizcircle_photo_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_b_city" primaryKey="city_code" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_b_region" primaryKey="id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_b_region_city" primaryKey="id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_b_region_county" primaryKey="id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_b_region_province" primaryKey="id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_c_biz_category" primaryKey="biz_category_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_c_coodr_trans" primaryKey="coodr_trans_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_c_module" primaryKey="module_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_c_shop_category" primaryKey="shop_category_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_emp_module" primaryKey="emp_module_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_dim_building_category" primaryKey="buildingcategory_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_dim_company_category" primaryKey="company_category_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_shop_company_rank" primaryKey="top_shop_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_c_shop_user_category" primaryKey="shop_user_category_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_c_user_category" primaryKey="user_category_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_dim_company_scale" primaryKey="company_scale_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_c_censors" primaryKey="id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                
+                <table name="t_d_building" primaryKey="id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_building_photo" primaryKey="building_photo_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_building_refined" primaryKey="building_code" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_company" primaryKey="company_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_company_extra" primaryKey="company_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_company_label" primaryKey="company_label_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_company_notice" primaryKey="company_notice_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_company_photo" primaryKey="company_photo_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_company_product" primaryKey="company_product_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_company_recruit" primaryKey="company_recruit_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_street" primaryKey="id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_street_data" primaryKey="id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_street_detail" primaryKey="id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_street_photo" primaryKey="street_photo_id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_street_refined" primaryKey="street_code" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_d_shop_data" primaryKey="id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                <table name="t_f_shop_data" primaryKey="id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
+                
+                <table name="t_d_shop" primaryKey="shop_id" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_3d_contract" primaryKey="shop_3d_contract_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_3d_ratio" primaryKey="shop_3d_contract_id" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_addr" primaryKey="shop_addr_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_apply" primaryKey="shop_apply_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_apply_3d" primaryKey="shop_apply_3d_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_apply_3d_log" primaryKey="shop_apply_log_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_apply_snapshot" primaryKey="shop_apply_id" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_attached" primaryKey="shop_id" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_category" primaryKey="shop_category_map_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_extra" primaryKey="shop_id" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_label" primaryKey="shop_label_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_notice" primaryKey="shop_notice_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_employee" primaryKey="emp_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_photo" primaryKey="shop_photo_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop_recommend" primaryKey="shop_id" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_user_shop" primaryKey="user_shop_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_r_user_shops" primaryKey="user_shop_sum_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_r_goods_sales" primaryKey="goods_sales_sum_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_user_dealer" primaryKey="user_dealer_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_user_id"/>
+                <table name="t_d_coupon" primaryKey="coupon_id" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+        </schema>
+
+        <schema name="vcity_order" checkSQLschema="true" sqlMaxLimit="50000000">
+                    <table name="MYCAT_SEQUENCE" dataNode="dn18" type="global"/>
+        
+                <table name="t_b_region" primaryKey="id" type="global" dataNode="dn18,dn19,dn20,dn21"/>
+                <table name="t_b_region_city" primaryKey="id" type="global" dataNode="dn18,dn19,dn20,dn21"/>
+                <table name="t_b_region_county" primaryKey="id" type="global" dataNode="dn18,dn19,dn20,dn21"/>
+                <table name="t_b_region_province" primaryKey="id" type="global" dataNode="dn18,dn19,dn20,dn21"/>
+                <table name="t_c_order_config" primaryKey="config_id" type="global" dataNode="dn18,dn19,dn20,dn21"/>
+                <table name="t_c_order_flow" primaryKey="order_flow_id" type="global" dataNode="dn18,dn19,dn20,dn21"/>
+                <table name="t_c_order_node" primaryKey="order_node_id" type="global" dataNode="dn18,dn19,dn20,dn21"/>
+                <table name="t_c_order_refund_reason" primaryKey="refund_reason_id" type="global" dataNode="dn18,dn19,dn20,dn21"/>
+                <table name="t_c_order_type" primaryKey="order_type_id" type="global" dataNode="dn18,dn19,dn20,dn21"/>
+                <table name="t_d_delivery_com" primaryKey="delivery_com_id" type="global" dataNode="dn18,dn19,dn20,dn21"/>
+
+                <table name="t_d_order_addr" primaryKey="order_id" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_id"/>
+                <table name="t_d_order_addr_his" primaryKey="order_addr_his_id" autoIncrement="true" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_id"/>
+                <table name="t_d_order_base" primaryKey="order_id" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_id"/>
+                <table name="t_d_order_base_deal" primaryKey="order_base_deal_id" autoIncrement="true" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_id"/>
+                <table name="t_d_order_complain" primaryKey="order_id" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_id"/>
+                <table name="t_d_order_complain_photo" primaryKey="complain_photo_id" autoIncrement="true" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_id"/>
+                <table name="t_d_order_consume" primaryKey="order_id" autoIncrement="true" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_id"/>
+                <table name="t_d_order_deal" primaryKey="order_deal_id" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_deal_id"/>
+                <table name="t_d_order_delivery" primaryKey="order_delivery_id" autoIncrement="true" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_id"/>
+                <table name="t_d_order_detail" primaryKey="order_detail_id" autoIncrement="true" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_id"/>
+                <table name="t_d_order_dispute" primaryKey="order_dispute_id" autoIncrement="true" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_refund_id"/>
+                <table name="t_d_order_dispute_judge" primaryKey="order_dispute_id" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_refund_id"/>
+                <table name="t_d_order_dispute_photo" primaryKey="dispute_photo_id" autoIncrement="true" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_refund_id"/>
+                <table name="t_d_order_price_his" primaryKey="order_price_his_id" autoIncrement="true" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_id"/>
+                <table name="t_d_order_recv" primaryKey="order_id" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_id"/>
+                <table name="t_d_order_refund" primaryKey="order_refund_id" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_refund_id"/>
+                <table name="t_d_order_refund_delivery" primaryKey="order_refund_id" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_refund_id"/>
+                <table name="t_d_order_refund_detail" primaryKey="order_refund_id" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_refund_id"/>
+                <table name="t_d_order_refund_extra" primaryKey="order_refund_id" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_refund_id"/>
+                <table name="t_d_order_refund_log" primaryKey="refund_log_id" autoIncrement="true" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_refund_id"/>
+                <table name="t_d_order_refund_photo" primaryKey="refund_photo_id" autoIncrement="true" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_refund_id"/>    
+                <table name="t_d_order_status" primaryKey="order_id" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_id"/>
+                <table name="t_d_order_status_his" primaryKey="order_status_his_id" autoIncrement="true" dataNode="dn18,dn19,dn20,dn21" rule="t_r_order_id"/>
+        </schema>
+
+        <schema name="vcity_comment" checkSQLschema="true" sqlMaxLimit="50000000">
+                     <table name="MYCAT_SEQUENCE" dataNode="dn26" type="global"/>
+                    
+                 <table name="t_c_shop_cmt" primaryKey="shop_id" dataNode="dn26,dn27,dn28,dn29" rule="t_r_shop_id"/>
+                 <table name="t_d_goods_cmt" primaryKey="goods_id" dataNode="dn26,dn27,dn28,dn29" rule="t_r_shop_id"/>
+                 <table name="t_d_order_cmt" primaryKey="order_id" dataNode="dn26,dn27,dn28,dn29" rule="t_r_shop_id"/>
+                 <table name="t_d_order_cmt_photo" primaryKey="order_cmt_photo_id" autoIncrement="true" dataNode="dn26,dn27,dn28,dn29" rule="t_r_shop_id"/>
+                 <table name="t_d_order_detail_cmt" primaryKey="order_detail_cmt_id" autoIncrement="true" dataNode="dn26,dn27,dn28,dn29" rule="t_r_shop_id"/>
+                 <table name="t_d_shop_cmt" primaryKey="shop_cmt_id" autoIncrement="true" dataNode="dn26,dn27,dn28,dn29" rule="t_r_shop_id"/>
+                 <table name="t_l_cmt_oper" primaryKey="cmt_oper_id" autoIncrement="true" dataNode="dn26,dn27,dn28,dn29" rule="t_r_shop_id"/>
+        </schema>
+                         
+        <schema name="vcity_account" checkSQLschema="true" sqlMaxLimit="50000000" dataNode="dn30"></schema>        
+
+        <schema name="vcity_pay" checkSQLschema="true" sqlMaxLimit="50000000" dataNode="dn31"></schema> 
+
+        <schema name="vcity_manage" checkSQLschema="true" sqlMaxLimit="50000000" dataNode="dn32"></schema>
+      
+        <schema name="vcity_chat" checkSQLschema="true" sqlMaxLimit="50000000" dataNode="dn33"></schema>          
+
+        <schema name="vcity_nbr" checkSQLschema="true" sqlMaxLimit="50000000" dataNode="dn34"></schema> 
+                 
+        <schema name="pxsj_scheduler" checkSQLschema="true" sqlMaxLimit="50000000" dataNode="dn35"></schema> 
+                 
+        <schema name="pxsj_sms" checkSQLschema="true" sqlMaxLimit="50000000" dataNode="dn36"></schema>
+
+        <schema name="php_eboss" checkSQLschema="true" sqlMaxLimit="50000000" dataNode="dn37"></schema>
+     
+        <schema name="vcity_game" checkSQLschema="true" sqlMaxLimit="50000000" dataNode="dn38"></schema>
+        
+        <schema name="welson_game" checkSQLschema="true" sqlMaxLimit="50000000" dataNode="dn39"></schema>
+        
+
+        <dataNode name="dn1" dataHost="dev246-1" database="vcity_user1"/>
+        <dataNode name="dn2" dataHost="dev246-2" database="vcity_user2"/>
+        <dataNode name="dn3" dataHost="dev246-3" database="vcity_user3"/>
+        <dataNode name="dn4" dataHost="dev246-4" database="vcity_user4"/>
+        <dataNode name="dn5" dataHost="dev246-1" database="user_global"/>
+        <dataNode name="dn6" dataHost="dev246-1" database="pxsj_ucenter1"/>
+        <dataNode name="dn7" dataHost="dev246-2" database="pxsj_ucenter2"/>
+        <dataNode name="dn8" dataHost="dev246-3" database="pxsj_ucenter3"/>
+        <dataNode name="dn9" dataHost="dev246-4" database="pxsj_ucenter4"/>
+        <dataNode name="dn10" dataHost="dev246-1" database="vcity_goods1"/>
+        <dataNode name="dn11" dataHost="dev246-2" database="vcity_goods2"/>
+        <dataNode name="dn12" dataHost="dev246-3" database="vcity_goods3"/>
+        <dataNode name="dn13" dataHost="dev246-4" database="vcity_goods4"/>
+        <dataNode name="dn14" dataHost="dev246-1" database="vcity_shop1"/>
+        <dataNode name="dn15" dataHost="dev246-2" database="vcity_shop2"/>
+        <dataNode name="dn16" dataHost="dev246-3" database="vcity_shop3"/>
+        <dataNode name="dn17" dataHost="dev246-4" database="vcity_shop4"/>
+        <dataNode name="dn18" dataHost="dev246-1" database="vcity_order1"/>
+        <dataNode name="dn19" dataHost="dev246-2" database="vcity_order2"/>
+        <dataNode name="dn20" dataHost="dev246-3" database="vcity_order3"/>
+        <dataNode name="dn21" dataHost="dev246-4" database="vcity_order4"/>
+        <dataNode name="dn26" dataHost="dev246-1" database="vcity_comment1"/>
+        <dataNode name="dn27" dataHost="dev246-2" database="vcity_comment2"/>
+        <dataNode name="dn28" dataHost="dev246-3" database="vcity_comment3"/>
+        <dataNode name="dn29" dataHost="dev246-4" database="vcity_comment4"/>
+        <dataNode name="dn30" dataHost="dev246-1" database="vcity_account"/>
+        <dataNode name="dn31" dataHost="dev246-1" database="vcity_pay"/>
+        <dataNode name="dn32" dataHost="dev246-1" database="vcity_manage"/>
+        <dataNode name="dn33" dataHost="dev246-1" database="vcity_chat"/>
+        <dataNode name="dn34" dataHost="dev246-1" database="vcity_nbr"/>
+        <dataNode name="dn35" dataHost="dev246-1" database="pxsj_scheduler"/>
+        <dataNode name="dn36" dataHost="dev246-1" database="pxsj_sms"/>
+        <dataNode name="dn37" dataHost="dev246-1" database="php_eboss"/>
+        <dataNode name="dn38" dataHost="dev246-1" database="vcity_game"/>
+        <dataNode name="dn39" dataHost="dev246-1" database="welson_game"/>
+      
+        <dataHost name="dev246-1" maxCon="100" minCon="5" balance="0" writeType="0" dbType="mysql" dbDriver="native" switchType="-1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM1" url="192.168.31.246:3306" user="mycat_test" password="pxsj_987">
+                </writeHost>
+        </dataHost>
+        <dataHost name="dev246-2" maxCon="100" minCon="5" balance="0" writeType="0" dbType="mysql" dbDriver="native" switchType="-1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM1" url="192.168.31.246:3306" user="mycat_test" password="pxsj_987">
+                </writeHost>
+        </dataHost>
+        <dataHost name="dev246-3" maxCon="100" minCon="5" balance="0" writeType="0" dbType="mysql" dbDriver="native" switchType="-1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM1" url="192.168.31.246:3306" user="mycat_test" password="pxsj_987">
+                </writeHost>
+        </dataHost>
+        <dataHost name="dev246-4" maxCon="100" minCon="5" balance="0" writeType="0" dbType="mysql" dbDriver="native" switchType="-1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM1" url="192.168.31.246:3306" user="mycat_test" password="pxsj_987">
+                </writeHost>
+        </dataHost>
+</mycat:schema>
+
+
