@@ -85,6 +85,9 @@ public class RouteService {
 //      boolean isMatchOldHint = stmt.startsWith(OLD_MYCAT_HINT);
 //      boolean isMatchNewHint = stmt.startsWith(NEW_MYCAT_HINT);
 //		if (isMatchOldHint || isMatchNewHint ) {
+		/*
+		 * hintLength表示/*[\\s]+!mycat:这个注解结束的位置
+		 * */
 		int hintLength = RouteService.isHintSql(stmt);
 		if(hintLength != -1){
 			int endPos = stmt.indexOf("*/");
@@ -181,17 +184,15 @@ public class RouteService {
                 parseKeyValue(map, substring);
                 begin=i+1;
             }
-            else
-            if(cur=='\'')
+            else if(cur=='\'')
             {
                 y++;
-            } if(i==sql.length()-1)
-        {
-            parseKeyValue(map, sql.substring(begin));
-
-        }
-
-
+            } 
+            
+            if(i==sql.length()-1)
+            {
+                parseKeyValue(map, sql.substring(begin));
+            }
         }
         return map;
     }
