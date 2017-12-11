@@ -66,6 +66,9 @@ public class SchemaConfig {
 		this.tables = tables;
 		this.defaultMaxLimit = defaultMaxLimit;
 		buildJoinMap(tables);
+		/*
+		 * 如果schema下面没有配置任何table，则认为这个schema是不需要分片的。这个时候，必须配置dataNode，否则schema配置无意义
+		 * */
 		this.noSharding = (tables == null || tables.isEmpty());
 		if (noSharding && dataNode == null) {
 			throw new RuntimeException(name

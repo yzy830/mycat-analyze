@@ -54,6 +54,11 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		 *  只有mysql时只支持mysql语法
 		 */
 		SQLStatementParser parser = null;
+		/*
+		 * yzy
+		 * 
+		 * isNeedSupportMutilDBType在host的dbType不是mysql时，均为true，因此这里只有两个分支。
+		 * */
 		if (schema.isNeedSupportMultiDBType()) {
 			parser = new MycatStatementParser(stmt);
 		} else {
