@@ -263,6 +263,32 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
         return "";
     }
     
+    /**
+     * 这里覆盖了visit(SQLBinaryOpExpr x)方法，主要有两个目的
+     * <ol>
+     *   <li>过滤对分片定位无用的条件，只保留有效的条件。保留的条件包括Equality、is、isNot、LessThanOrEqualOrGreaterThan</li>
+     *   <li>针对BooleanOr运算，做特殊处理，拆分为WhereUnit</li>
+     * </ol>
+     * 除此以外，与SchemaStatVisitor的处理方式相同
+     * 
+     * <p>
+     *   对BooleanOr的处理，针对conditions是否为空做了两种处理。其原因在于，如果condition为空，说明join条件为空，并且整个where表达式
+     *   被抽象为了一个BooleanOr表示式(这个表达式的内部结构可能非常负责)；而condition不为空，说明BooleanOr是一个复杂条件表达式的一个子结构。
+     * </p>
+     * 
+     * <p>
+     *   在后一种情况下，外层结构已经处理完毕，因此构造了一个空的WhereUnit，并设置FinishedParse = true，保存外部已经解析完成的条件
+     *   outConditions。然后，用一个子WhereUnit，保存待处理的BooleanOr条件。
+     * </p>
+     * 
+     * <p>
+     *   在前一种情况下，已解析的条件为空，整个where表达式都没有解析，因此直接保存为一个WhereUnit。
+     * </p>
+     * 
+     * <p>
+     *   在遇到一个BooleanOr结构的时候，会返回false，也就是不进一步解析内部结构。这个过程将交给{@code #splitConditions()}来处理
+     * </p>
+     * */
     @Override
 	public boolean visit(SQLBinaryOpExpr x) {
         x.getLeft().setParent(x);
@@ -281,7 +307,7 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
             	//永真条件，where条件抛弃
             	if(!RouterUtil.isConditionAlwaysTrue(x)) {
             		hasOrCondition = true;
-            		
+
             		WhereUnit whereUnit = null;
             		if(conditions.size() > 0) {
             			whereUnit = new WhereUnit();
@@ -317,7 +343,7 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
 		for(WhereUnit whereUnit : whereUnits) {
 			splitUntilNoOr(whereUnit);
 		}
-		
+		// 备份whereUnit，在loopFindSubWhereUnit中，会清理whereUnits。storedWhereUnits保存了顶级的WhereUnit
 		this.storedwhereUnits.addAll(whereUnits);
 		
 		loopFindSubWhereUnit(whereUnits);
@@ -332,33 +358,67 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
 	}
 	
 	/**
+	 * <p>
+	 * 递归splitedExprList。splitUntilNoOr的处理中，BooleanOr的右子表达式都直接保存在splitedExprList中，
+	 * 这些子表达式中，可能存在更丰富的结构，需要单独处理。
+	 * </p>
+	 * 
+	 * <p>
+	 * 这个方法在处理时，首先清理掉了whereUnits等信息(已经被备份到了storedwhereUnits中)，然后调用表达式的accept方法，进一步分析这个表达式，
+	 * 知道表达式不含有or结构。
+	 * </p>
+	 * 
+	 * <p>
+	 * 这个方法会一直递归，直到最后一层的表达式中，不包含任何的BooleanOr结构。因此，可以断定，在这个方法处理完的时候，conditions列表是空的
+	 * </p>
+	 * 
 	 * 循环寻找子WhereUnit（实际是嵌套的or）
 	 * @param whereUnitList
 	 */
 	private void loopFindSubWhereUnit(List<WhereUnit> whereUnitList) {
 		List<WhereUnit> subWhereUnits = new ArrayList<WhereUnit>();
+		/*
+		 * 层次遍历。先处理每一个层次的所有splited表达式，处理完之后，统一处理新生成的WhereUnit
+		 * */
 		for(WhereUnit whereUnit : whereUnitList) {
 			if(whereUnit.getSplitedExprList().size() > 0) {
 				List<SQLExpr> removeSplitedList = new ArrayList<SQLExpr>();
 				for(SQLExpr sqlExpr : whereUnit.getSplitedExprList()) {
 					reset();
+					/*
+					 * isExprHasOr的处理是很关键的。这个方法，将对每一个表达式重新调用
+					 * MycatSchemaStatVisitor，因此，嵌套结构中的条件，可以得到
+					 * 分析
+					 * */
 					if(isExprHasOr(sqlExpr)) {
 						removeSplitedList.add(sqlExpr);
+						/*
+						 * 这里可能存在bug。一个子表达式可能存在多个WhereUnit结构，需要设计测试用例来
+						 * */
 						WhereUnit subWhereUnit = this.whereUnits.get(0);
+						/*
+						 * 拆分新生成的WhereUnit，处理左子表达式，保留右子表达式，等待递归处理
+						 * */
 						splitUntilNoOr(subWhereUnit);
 						whereUnit.addSubWhereUnit(subWhereUnit);
 						subWhereUnits.add(subWhereUnit);
 					} else {
+					    /* 
+					     * 这里会清理conditions条件，因此，当存在WhereUnit结构时，
+					     * MycatSchemaStatVisitor中的conditions不会保留完整的条件
+					     * */
 						this.conditions.clear();
 					}
 				}
 				if(removeSplitedList.size() > 0) {
+				    // 移除已经进一步分解的表达式
 					whereUnit.getSplitedExprList().removeAll(removeSplitedList);
 				}
 			}
 			subWhereUnits.addAll(whereUnit.getSubWhereUnit());
 		}
 		if(subWhereUnits.size() > 0) {
+		    // 递归处理下一个层次的WhereUnit
 			loopFindSubWhereUnit(subWhereUnits);
 		}
 	}
@@ -396,6 +456,14 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
 						mergedConditionList.get(i).addAll(whereUnit.getOutConditions());
 					}
 				}
+				/*
+				 * 这里存在bug，直接覆盖了父WhereUnit的condition，会导致一些条件下，分片覆盖不全，例如
+				 * EXPLAIN select * from vcity_order.t_d_order_base where (order_type_code = 'O2O' and (order_id = 1 or order_id = 3)) or 
+                 * (order_type_code = 'B2C' and order_id = 2) or (order_type_code = 'TAKE_OUT' and (order_id = 4 or order_id = 8));
+				 * 
+				 * 应该改成这样
+				 * whereUnit.getConditionList().addAll(mergedConditionList);
+				 * */
 				whereUnit.setConditionList(mergedConditionList);
 			} else if(whereUnit.getSubWhereUnit().size() == 1) {
 				if(whereUnit.getOutConditions().size() > 0 && whereUnit.getSubWhereUnit().get(0).getConditionList().size() > 0) {
@@ -412,6 +480,12 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
 	
 	/**
 	 * 条件合并：多个WhereUnit中的条件组合
+	 * 
+	 * <p>
+	 * 合并一个WhereUnit的所有子WhereUnit条件，每两个WhereUnit之间调用{@code #merge(List, List)}，按照笛卡尔积
+	 * 合并conditions。
+	 * <p>
+	 * 
 	 * @return
 	 */
 	private List<List<Condition>> getMergedConditionList(List<WhereUnit> whereUnitList) {
@@ -429,6 +503,13 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
 	
 	/**
 	 * 两个list中的条件组合
+	 * 
+	 * <p>
+	 * list1和list2采用量量组合的方式，得到最丰富的组合结果。例如，list1包含三个List<Condition> A/B/C，
+	 * list2包含2个List<Condition> D/E。得到的结果是6个List<Condition>，分别是
+	 * (A,D)、(A,E)、(B,D)、(B,E)、(C,D)、(C,D)
+	 * </p>
+	 * 
 	 * @param list1
 	 * @param list2
 	 * @return
@@ -455,6 +536,9 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
 	private void getConditionsFromWhereUnit(WhereUnit whereUnit) {
 		List<List<Condition>> retList = new ArrayList<List<Condition>>();
 		//or语句外层的条件:如where condition1 and (condition2 or condition3),condition1就会在外层条件中,因为之前提取
+		/*
+		 * yzy: 这里记录outSideCondition列表是没有意义的。在上一步处理完的时候，conditions列表必定为空
+		 * */
 		List<Condition> outSideCondition = new ArrayList<Condition>();
 //		stashOutSideConditions();
 		outSideCondition.addAll(conditions);
@@ -467,6 +551,12 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
 			retList.add(conditions);
 			this.conditions.clear();
 		}
+		/*
+		 * 没一个WhereUnit都可能包含一组不包含BooleanOr结构的splited expr。每个这样的一个表达式，都可能包含丰富的条件表达式，
+		 * 这些表达式在loopFindSubWhereUnit中，是没有处理的。
+		 * 
+		 * 在这里，每个表达式的条件列表，都保存为一个List<Condition>。所有的表达式的条件列表成为一个二级结构List<List<Condition>>
+		 * */
 		whereUnit.setConditionList(retList);
 		
 		for(WhereUnit subWhere : whereUnit.getSubWhereUnit()) {
@@ -476,6 +566,18 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
 	
 	/**
 	 * 递归拆分OR
+	 * 
+	 * <p>
+	 *   这个方法递归拆解一个WhereUnit。一个WhereUnit如果isFinishedParse为true，那么只有subWhereUnit是可分解的；
+	 *   反之，他的canSplitExpr是可分解的。
+	 * <p>
+	 * 
+	 * <p>
+	 *   在这个方法中，只拆解一个BooleanOr表达式的左子表达式，直接将右子表达式直接加入已分解表达式列表{@code WhereUnit#splitedExprList}中，
+	 *   直到左子表达式不是BooleanOr表达式。
+	 *   这个代码有一个小问题，在做左子表达式不是一个SQLBinaryOpExpr时，不会设置isFinishedParse为true也不会清理canSplitExpr。如果再次
+	 *   对这个WhereUnit调用{@code splitUntilNoOr}，会设置isFinishedParse为true，但是会导致最后一个表达式重复
+	 * </p>
 	 * 
 	 * @param whereUnit
 	 * TODO:考虑嵌套or语句，条件中有子查询、 exists等很多种复杂情况是否能兼容
@@ -505,6 +607,13 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
 		}
     }
 
+	/**
+	 * 首先判断一个表达式是否永远为false。如果永远为false，不用处理。因为永远为false的条件，对
+	 * BooleanOr结构不起作用
+	 * 
+	 * @param whereUnit
+	 * @param expr
+	 */
 	private void addExprIfNotFalse(WhereUnit whereUnit, SQLExpr expr) {
 		//非永假条件加入路由计算
 		if(!RouterUtil.isConditionAlwaysFalse(expr)) {

@@ -4,28 +4,25 @@ import io.mycat.route.parser.druid.MycatSchemaStatVisitor;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
-import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlSchemaStatVisitor;
-import com.alibaba.druid.sql.visitor.SchemaStatVisitor;
 
-/**
- * 从测试看
- * (1) {@link SchemaStatVisitor#getAliasMap()}是从别名到真名的映射，包括表的别名和select column的别名
- * (2) 如果存在or条件，or条件会存放在whereUnit中，condition中只会存放and条件
- * (3) tableStat表示每个表参与的运算，例如select/update等
- */
 public class Visitor {
     public static void main(String[] args) {
-    	String sql = "select o.order_id as orderId, max(o.order_sum) as orderSum, upper(uv.user_name) userName from t_d_order o "
-                + "join (select u.user_id, u.user_name,u.user_gender from t_d_user u join t_d_user_detail ud on u.user_id = ud.user_id) uv on o.user_id = uv.user_id "
-                + "where o.order_sum > 100 and uv.user_name in ('a', 'b') group by o.user_id having max(o.order_sum) > 200 order by uv.gender desc limit 0,10";
+//        String sql = "select * from t_d_order where (((order_type = 'O2O' and (user_id = 1 or user_id = 3)) or "
+//                + "(order_type = 'B2C' and user_id = 2)) or "
+//                + "(order_sum > 100 or (order_sum < 50 and user_id = 4 and (order_id = 1 or order_id = 2)))) "
+//                + "and order_status = 'Y'";
+        String sql = "select * from t_d_order where (order_type_code = 'O2O' and (order_id = 1 or order_id = 3)) or "
+                + "(order_type_code = 'B2C' and order_id = 2) or "
+                + "(order_type_code = 'TAKE_OUT' and (order_id = 4 or order_id = 8))";
         
         MySqlStatementParser parser = new MySqlStatementParser(sql);
         
         SQLStatement statement = parser.parseStatement();
         
-        MySqlSchemaStatVisitor visitor = new MySqlSchemaStatVisitor();
+        MycatSchemaStatVisitor visitor = new MycatSchemaStatVisitor(); 
         statement.accept(visitor);
         
+        System.out.println("splitConditions = " + visitor.splitConditions());
         System.out.println("columns = " + visitor.getColumns());
         System.out.println("conditions = " + visitor.getConditions());
         System.out.println("aggregates = " + visitor.getAggregateFunctions());
@@ -38,14 +35,7 @@ public class Visitor {
         System.out.println("currentTable = " + visitor.getCurrentTable());
         System.out.println("aliasMap = " + visitor.getAliasMap());
         System.out.println("variants = " + visitor.getVariants());
-    	
-//        String sql = "select e.eventId, e.eventKey, e.eventName, e.flag from "
-//                + "event e join user u where eventId = ? and eventKey = ? and (eventName = ? or eventName = ?) "
-//                + "and u.user_id = 1 and e.event_time = ? group by u.user_id order by eventName";
-//        MySqlStatementParser parser = new MySqlStatementParser(sql); 
-//        SQLStatement statement = parser.parseStatement(); 
-//        MycatSchemaStatVisitor visitor = new MycatSchemaStatVisitor(); 
-//        
-//        statement.accept(visitor);
+        System.out.println("whereUnits = " + visitor.getWhereUnits());
+        
     }
 }
