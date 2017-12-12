@@ -308,6 +308,15 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
             	if(!RouterUtil.isConditionAlwaysTrue(x)) {
             		hasOrCondition = true;
 
+            		/*
+            		 * 这个地方的处理有点问题，明天需要验证一下。如果先处理了BooleanOr，再处理其他条件，例如
+            		 * (user_id = 1 or user_id = 2) and status = 'Y'，
+            		 * 
+            		 * 由于status = 'Y'这个条件在后面处理，那么在解析出来的WhereUnit里面，不会出现status = 'Y'
+            		 * 这个条件，而正常情况下status = 'Y'应该作为out conditions。
+            		 * 
+            		 * 这可能导致缺少在某些情况下，无法正确确定分片
+            		 * */
             		WhereUnit whereUnit = null;
             		if(conditions.size() > 0) {
             			whereUnit = new WhereUnit();
@@ -463,6 +472,11 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
 				 * 
 				 * 应该改成这样
 				 * whereUnit.getConditionList().addAll(mergedConditionList);
+				 * 
+				 * mergedConditionList = merge(mergedConditionList, whereUnit.getConditionList());
+				 * ... (处理outcondition)
+				 * 
+				 * whereUnit.setConditionList(mergedConditionList);
 				 * */
 				whereUnit.setConditionList(mergedConditionList);
 			} else if(whereUnit.getSubWhereUnit().size() == 1) {
