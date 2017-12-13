@@ -112,7 +112,7 @@
                 <table name="t_d_shop_data" primaryKey="id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
                 <table name="t_f_shop_data" primaryKey="id" type="global" dataNode="dn14,dn15,dn16,dn17"/>
                 
-                <table name="t_d_shop" primaryKey="shop_id" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
+                <table name="t_d_shop" ruleRequired="true" primaryKey="shop_id" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
                 <table name="t_d_shop_3d_contract" primaryKey="shop_3d_contract_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
                 <table name="t_d_shop_3d_ratio" primaryKey="shop_3d_contract_id" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>
                 <table name="t_d_shop_addr" primaryKey="shop_addr_id" autoIncrement="true" dataNode="dn14,dn15,dn16,dn17" rule="t_r_shop_id"/>

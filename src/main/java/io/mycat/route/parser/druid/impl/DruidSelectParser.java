@@ -418,6 +418,9 @@ public class DruidSelectParser extends DefaultDruidParser {
 		// yzy： 如果一个语句涉及的表都是全局表，则isAllGlobalTable = true
 		boolean isAllGlobalTable = RouterUtil.isAllGlobalTable(ctx, schema);
 		for (RouteCalculateUnit unit : ctx.getRouteCalculateUnits()) {
+		    /*
+		     * 如果存在多个calculate unit(存在or的情况)，对每一个calculate unit单独计算，然后求并集
+		     * */
 			RouteResultset rrsTmp = RouterUtil.tryRouteForTables(schema, ctx, unit, rrs, true, cachePool);
 			if (rrsTmp != null&&rrsTmp.getNodes()!=null) {
 				for (RouteResultsetNode node : rrsTmp.getNodes()) {
@@ -425,6 +428,9 @@ public class DruidSelectParser extends DefaultDruidParser {
 				}
 			}
 			if(isAllGlobalTable) {//都是全局表时只计算一遍路由
+			    /*
+			     * yzy: 全都是全局表的时候，路由结果与列没有关系，只与表名有关系，因此，只需要计算一次，而不需要多次计算求并集
+			     * */
 				break;
 			}
 		}

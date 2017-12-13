@@ -953,6 +953,10 @@ public class RouterUtil {
 		List<String> tables = ctx.getTables();
 		
 		if(schema.isNoSharding()||(tables.size() >= 1&&isNoSharding(schema,tables.get(0)))) {
+		    /*
+		     * 如果schema没有分片(schema下没有配置任何table)或者tables中第一个表是不分片的表(如何schema不包含这个表，则认为这个表没有分片，
+		     * 这里要区分不分片表和全局表。mycat假设你不会在分片表和不分片表间join，因此没有检查所有的表)
+		     * */
 			return routeToSingleNode(rrs, schema.getDataNode(), ctx.getSql());
 		}
 
@@ -1075,27 +1079,44 @@ public class RouterUtil {
 		}
 		
 		if(tc.isDistTable()){
+		    /*
+		     * yzy: 处理分表(table里面配置了sub tables)，这个特性没有任何实际应用场景。因此，不需要关注，直接忽略
+		     * */
 			return routeToDistTableNode(tableName,schema,rrs,ctx.getSql(), routeUnit.getTablesAndConditions(), cachePool,isSelect);
 		}
 		
 		if(tc.isGlobalTable()) {//全局表
+		    /*
+             * 为什么全局表路由结果不缓存
+             * */
 			if(isSelect) {
 				// global select ,not cache route result
 				rrs.setCacheAble(false);
+				/*
+				 * yzy: 全局表的情况下，随机选取一个dataNode作为路由目标
+				 * */
 				return routeToSingleNode(rrs, tc.getRandomDataNode(),ctx.getSql());
 			} else {//insert into 全局表的记录
 				return routeToMultiNode(false, rrs, tc.getDataNodes(), ctx.getSql(),true);
 			}
 		} else {//单表或者分库表
 			if (!checkRuleRequired(schema, ctx, routeUnit, tc)) {
+			    /*
+			     * 配置了ruleRequired = true，但是查询条件没有分片建
+			     * */
 				throw new IllegalArgumentException("route rule for table "
 						+ tc.getName() + " is required: " + ctx.getSql());
 
 			}
+			
 			if(tc.getPartitionColumn() == null && !tc.isSecondLevel()) {//单表且不是childTable
+			    /*
+			     * 没有指定路由规则，并且不是子表的情况，直接路由到所有分片
+			     * 
+			     * 这个地方体现了全局表和不分片表的差别。全局表，对dml，路由到全部节点；对于select语句，路由到任意单个结单，采用随机方式，负载均衡。
+                // 不分片表，对于dml和select，都会路由到所有节点，性能上比较差
+			     * */
 //				return RouterUtil.routeToSingleNode(rrs, tc.getDataNodes().get(0),ctx.getSql());
-			    // 这个地方体现了全局表和不分片表的差别。全局表，对dml，路由到全部节点；对于select语句，路由到任意单个结单，采用随机方式，负载均衡。
-			    // 不分片表，对于dml和select，都会路由到所有节点，性能上比较差
 				return routeToMultiNode(rrs.isCacheAble(), rrs, tc.getDataNodes(), ctx.getSql());
 			} else {
 				//每个表对应的路由映射
@@ -1112,11 +1133,34 @@ public class RouterUtil {
 					return routeToMultiNode(rrs.isCacheAble(), rrs, tc.getDataNodes(), ctx.getSql());
 				} else {
 					return routeToMultiNode(rrs.isCacheAble(), rrs, tablesRouteMap.get(tableName), ctx.getSql());
-				}
+				} 
 			}
 		}
 	}
 	
+	/**
+	 * 这个方法在处理distinct tables。在mycat的table配置中，有一个subTables配置。通过这个配置，可以将一个table，划分为物流上的几个table，
+	 * mycat称之为分表。
+	 * 
+	 * <p>
+	 *   在当前情况下，一个表，如果进行了分表，那么这个表的dataNode只能配置一个(如果大于一个，这个方法将抛出异常)，并且mycat不支持对这个表的各种join
+	 *   查询。
+	 * </p>
+	 * 
+	 * <p>
+	 *   因此，至少从当前来看，这个功能没有任何实际作用。
+	 * </p>
+	 * 
+	 * @param tableName
+	 * @param schema
+	 * @param rrs
+	 * @param orgSql
+	 * @param tablesAndConditions
+	 * @param cachePool
+	 * @param isSelect
+	 * @return
+	 * @throws SQLNonTransientException
+	 */
 	private static RouteResultset routeToDistTableNode(String tableName, SchemaConfig schema, RouteResultset rrs,
 			String orgSql, Map<String, Map<String, Set<ColumnRoutePair>>> tablesAndConditions,
 			LayerCachePool cachePool, boolean isSelect) throws SQLNonTransientException {
@@ -1226,6 +1270,14 @@ public class RouterUtil {
 
 	/**
 	 * 处理分库表路由
+	 * 
+	 * <p>
+	 *   这个方法可以同时处理多张表的路由计算。每张表单机计算，结果存放在入参tablesRouteMap中。
+	 * </p>
+	 * 
+	 * <p>
+	 *   多张表的路由结果，会在调用者中计算交集，这个方法不做处理
+	 * </p>
 	 */
 	public static void findRouteWithcConditionsForTables(SchemaConfig schema, RouteResultset rrs,
 			Map<String, Map<String, Set<ColumnRoutePair>>> tablesAndConditions,
@@ -1260,6 +1312,13 @@ public class RouterUtil {
                      //由于load data一次会计算很多路由数据，如果输出此日志会极大降低load data的性能
                          isLoadData=true;
                 }
+                
+                /*
+                 * yzy: 从这个逻辑看，只有table config配置了primaryKey，并且只根据主键来查的时候，主键路由缓存才生效。
+                 * 
+                 * 例如，在select * from t_d_order_base where order_id in (1,2,3)可以进入这个分支；但是，
+                 * select * from t_d_order_base where order_id in (1,2,3) and status = 'Y'不行
+                 * */
 				if(entry.getValue().get(primaryKey) != null && entry.getValue().size() == 1&&!isLoadData)
                 {//主键查找
 					// try by primary key if found in cache
@@ -1287,6 +1346,12 @@ public class RouterUtil {
 						if (!allFound) {
 							// need cache primary key ->datanode relation
 							if (isSelect && tableConfig.getPrimaryKey() != null) {
+							    /*
+							     * 记录primaryKey的信息，格式是schema_tableName.primaryKey，例如
+							     * victy_shop_t_d_shop.shop_id。
+							     * 
+							     * 当后面定位到具体分片后，可以根据这个值缓存数据
+							     * */
 								rrs.setPrimaryKey(tableKey + '.' + tableConfig.getPrimaryKey());
 							}
 						} else {//主键缓存中找到了就执行循环的下一轮
@@ -1294,9 +1359,16 @@ public class RouterUtil {
 						}
 					}
 				}
+				
 				if (isFoundPartitionValue) {//分库表
+				    /*
+				     * 分库表处理比较直接，根据partitionValue，直接使用rule算法计算Node
+				     * */
 					Set<ColumnRoutePair> partitionValue = columnsMap.get(partionCol);
 					if(partitionValue == null || partitionValue.size() == 0) {
+					    /*
+					     * yzy: table config有rule，但是查询条件没有分片建(或者分片建不可解析)，直接路由到所有分片
+					     * */
 						if(tablesRouteMap.get(tableName) == null) {
 							tablesRouteMap.put(tableName, new HashSet<String>());
 						}
@@ -1418,6 +1490,12 @@ public class RouterUtil {
 	}
 
 	/**
+	 * 检查table的ruleRequired配置。如果一个table配置了ruleRequired = true，那么mycat要求，对这个表的查询语句必须要带分片键，如果没有则抛出异常。
+	 * 
+	 * <p>
+	 *   例如，对t_d_shop，使用shop_id分片，并且配置了ruleRequired = true。那么，在执行select * from t_d_shop时，就会报错；而改成
+	 *   select * from t_d_shop where shop_id = 1则成功
+	 * </p>
 	 *
 	 * @param schema
 	 * @param ctx

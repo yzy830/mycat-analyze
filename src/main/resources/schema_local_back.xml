@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+        <schema name="mycat" checkSQLschema="true" sqlMaxLimit="50000000">
+            <table name="MYCAT_SEQUENCE" dataNode="dn1" type="global"/>       
+            <table name="t_d_order" primaryKey="order_id" dataNode="dn1,dn2" rule="t_r_order_id"/>
+        </schema>        
+
+        <dataNode name="dn1" dataHost="localhost" database="mycat1"/>
+        <dataNode name="dn2" dataHost="localhost" database="mycat2"/>
+      
+        <dataHost name="localhost" maxCon="100" minCon="5" balance="0" writeType="0" dbType="mysql" dbDriver="native" switchType="-1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="host" url="localhost:3306" user="root" password="root">
+                </writeHost>
+        </dataHost>
+</mycat:schema>
+
+

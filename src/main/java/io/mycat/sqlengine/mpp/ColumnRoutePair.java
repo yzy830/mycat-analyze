@@ -24,6 +24,14 @@
 package io.mycat.sqlengine.mpp;
 
 /**
+ * <p>
+ *  {@code ColumnRoutePair}保存了一个路由列(用于计算路由节点的column)的值。一个值可能是一个单值(单值来自"="或者"in"运算)，也可能是一个rangeValue(来自between)。
+ * </p>
+ * 
+ * <p>
+ *   rangeValue的情况，会交给具体的路由算法处理，根据begin value和end value，计算出node的返回
+ * </p>
+ * 
  * column ->node index
  * 
  * @author wuzhih

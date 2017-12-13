@@ -158,6 +158,13 @@ public class DefaultDruidParser implements DruidParser {
 						tableName = visitor.getAliasMap().get(tableName);
 					}
 
+					/*
+					 * SchemaStatVisitor在遍历语法树的时候，在aliasMap中会存储别名->表名，表名->表名的映射。如果表名不存在，可能存在两种情况
+					 * (1) 列来自一个内敛视图，并且内联视图的select列表无法解析
+					 * (2) 列来自table(多个table join)，但是列没有带别名
+					 * 
+					 * 无论哪种情况，都无法判断这个列属于哪个表。因此，无法计算路由，直接忽略
+					 * */
 					if(visitor.getAliasMap() != null && visitor.getAliasMap().get(StringUtil.removeBackquote(condition.getColumn().getTable().toUpperCase())) == null) {//子查询的别名条件忽略掉,不参数路由计算，否则后面找不到表
 						continue;
 					}

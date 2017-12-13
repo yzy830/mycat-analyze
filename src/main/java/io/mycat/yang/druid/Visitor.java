@@ -11,9 +11,15 @@ public class Visitor {
 //                + "(order_type = 'B2C' and user_id = 2)) or "
 //                + "(order_sum > 100 or (order_sum < 50 and user_id = 4 and (order_id = 1 or order_id = 2)))) "
 //                + "and order_status = 'Y'";
-        String sql = "select * from t_d_order where (order_type_code = 'O2O' and (order_id = 1 or order_id = 3)) or "
-                + "(order_type_code = 'B2C' and order_id = 2) or "
-                + "(order_type_code = 'TAKE_OUT' and (order_id = 4 or order_id = 8))";
+
+        
+//        String sql = "select * from t_d_order where (order_type_code = 'O2O' and (order_id = 1 or order_id = 3)) or "
+//                + "(order_type_code = 'B2C' and order_id = 2) or "
+//                + "(order_type_code = 'TAKE_OUT' and (order_id = 4 or order_id = 8))";
+        
+        String sql = "select * from t_d_order where status = 'Y' and (((order_id = 1 or order_id = 3) and "
+                + "(order_type_code = 'B2C' or (order_id = 2 or order_id = 9))) or "
+                + "(order_id = 4 or order_id = 8))";
         
         MySqlStatementParser parser = new MySqlStatementParser(sql);
         

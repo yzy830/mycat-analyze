@@ -26,10 +26,15 @@ public class DruidShardingParseInfo {
 	
 	/**
 	 * （共享属性）
+	 * 
+	 * yzy: 这个属性，在路由计算阶段，保存原始sql；路由计算完成之后，会保存改写后的sql
 	 */
 	private String sql = "";
 	
 	//tables为路由计算共享属性，多组RouteCalculateUnit使用同样的tables
+	/**
+	 * yzy：保存sql使用到的多有表
+	 */
 	private List<String> tables = new ArrayList<String>();
 	
 //	private RouteCalculateUnit routeCalculateUnit = new RouteCalculateUnit(this); 
