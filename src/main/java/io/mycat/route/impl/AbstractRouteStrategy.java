@@ -20,6 +20,19 @@ public abstract class AbstractRouteStrategy implements RouteStrategy {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRouteStrategy.class);
 
+	/**
+	 * 执行sql路由，在路由过程中，大部门都统一走{@link #routeNormalSqlWithAST(SchemaConfig, String, RouteResultset, String, LayerCachePool)}，做统一处理。
+	 * 只有几种情况例外
+	 * <ol>
+	 *   <li>ddl：ddl一般需要路由到所有节点</li>
+	 *   <li>需要mycat生成序列</li>
+	 *   <li>在insert的时候，需要mycat生成自增主键</li>
+	 *   <li>在insert情况下，处理ER路由</li>
+	 * </ol>
+	 * 
+	 * 其他情况，无论是select/insert/update/delete，都是用相同的路由逻辑。一般，select的情况是最复杂的，可以先分析这种情况，后面再补充
+	 * insert/update/delete的情况
+	 * */
 	@Override
 	public RouteResultset route(SystemConfig sysConfig, SchemaConfig schema, int sqlType, String origSQL,
 			String charset, ServerConnection sc, LayerCachePool cachePool) throws SQLNonTransientException {

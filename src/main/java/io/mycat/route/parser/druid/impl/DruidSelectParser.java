@@ -104,6 +104,9 @@ public class DruidSelectParser extends DefaultDruidParser {
 		List<SQLSelectItem> selectList = mysqlSelectQuery.getSelectList();
         boolean isNeedChangeSql=false;
         int size = selectList.size();
+        /*
+         * yzy: 从druid的源码看，在使用select distinct时，distion option = 2
+         * */
         boolean isDistinct=mysqlSelectQuery.getDistionOption()==2;
         for (int i = 0; i < size; i++)
 		{
@@ -189,6 +192,13 @@ public class DruidSelectParser extends DefaultDruidParser {
         //通过优化转换成group by来实现
         if(isDistinct)
         {
+            /*
+             * yzy
+             * 
+             * 这是一个优化分支。对于mysql来说，可以使用group by来完成distinct，但是性能更高(有相关的测试)。
+             * 
+             * 这个只能在select distinct的时候使用，如果使用select distinctrow则不行
+             * */
             mysqlSelectQuery.setDistionOption(0);
             SQLSelectGroupByClause   groupBy=new SQLSelectGroupByClause();
             for (String fieldName : aliaColumns.keySet())
@@ -306,6 +316,11 @@ public class DruidSelectParser extends DefaultDruidParser {
 			Map<String, Map<String, Set<ColumnRoutePair>>> allConditions = getAllConditions();
 			boolean isNeedAddLimit = isNeedAddLimit(schema, rrs, mysqlSelectQuery, allConditions);
 			if(isNeedAddLimit) {
+			    /*
+			     * 这个分支，用于处理schema config和table config中的sqlMaxLimit和needAddLimit配置。
+			     * 
+			     * 只有在单边、不是主键查询、并且没有limit的时候，才需要添加
+			     * */
 				Limit limit = new Limit();
 				limit.setRowCount(new SQLIntegerExpr(limitSize));
 				mysqlSelectQuery.setLimit(limit);
@@ -316,6 +331,12 @@ public class DruidSelectParser extends DefaultDruidParser {
 			}
 			Limit limit = mysqlSelectQuery.getLimit();
 			if(limit != null&&!isNeedAddLimit) {
+			    /*
+			     * yzy: 这里是处理用户字节添加的limit。主要是跨分片分页的情况。例如按照金额排序，取第10个到
+			     * 第20个之间的订单。
+			     * 
+			     * 此时不能直接取，需要修改为在分割分片上去0~20的订单，然后在内存合并
+			     * */
 				SQLIntegerExpr offset = (SQLIntegerExpr)limit.getOffset();
 				SQLIntegerExpr count = (SQLIntegerExpr)limit.getRowCount();
 				if(offset != null) {
@@ -487,6 +508,12 @@ public class DruidSelectParser extends DefaultDruidParser {
 
 
 	
+	/**
+	 * 是否需要修改sql的limit。只有在路由到多个分片上的时候，才需要
+	 * 
+	 * @param rrs
+	 * @return
+	 */
 	protected boolean isNeedChangeLimit(RouteResultset rrs) {
 		if(rrs.getNodes() == null) {
 			return false;
@@ -525,6 +552,11 @@ public class DruidSelectParser extends DefaultDruidParser {
 	}
 	
 	/**
+	 * <p>
+	 *   单表且不带主键、sql不带limit时，才需要添加limit。这个limit主要是处理schema config和table config中的sql max limit
+	 *   和needAddLimit配置
+	 * </p>
+	 * 
 	 * 单表且是全局表
 	 * 单表且rule为空且nodeNodes只有一个
 	 * @param schema

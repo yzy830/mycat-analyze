@@ -8,25 +8,17 @@
         License for the specific language governing permissions and - limitations 
         under the License. -->
 <!DOCTYPE mycat:rule SYSTEM "rule.dtd">
-<mycat:rule xmlns:mycat="http://io.mycat/">
-
-       <tableRule name="t_r_user_id">
-                <rule>
-                        <columns>user_id</columns>
-                        <algorithm>mod-long</algorithm>
-                </rule>
-        </tableRule>
-
-                <tableRule name="t_r_shop_id">
-                <rule>
-                        <columns>shop_id</columns>
-                        <algorithm>mod-long</algorithm>
-                </rule>
-        </tableRule>
-     
+<mycat:rule xmlns:mycat="http://io.mycat/">     
         <tableRule name="t_r_order_id">
                 <rule>
                         <columns>order_id</columns>
+                        <algorithm>mod-long</algorithm>
+                </rule>
+        </tableRule>
+        
+        <tableRule name="t_r_user_id">
+                <rule>
+                        <columns>user_id</columns>
                         <algorithm>mod-long</algorithm>
                 </rule>
         </tableRule>
@@ -73,7 +65,7 @@
 
         <function name="mod-long" class="io.mycat.route.function.PartitionByMod">
                 <!-- how many data nodes -->
-                <property name="count">4</property>
+                <property name="count">2</property>
         </function>
       
         <function name="mod-long2" class="io.mycat.route.function.PartitionByMod">

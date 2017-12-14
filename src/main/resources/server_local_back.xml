@@ -77,8 +77,8 @@
         </firewall>
         -->
 
-        <user name="mycat">
-                <property name="password">mycat</property>
+        <user name="pxsjtest">
+                <property name="password">pxsj_123</property>
                 <property name="schemas">mycat</property>
         </user>
 </mycat:server>

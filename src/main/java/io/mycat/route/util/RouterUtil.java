@@ -825,6 +825,14 @@ public class RouterUtil {
 	}
 
 	/**
+	 * <p>
+	 *   这个方法处理最简答的ER配置：子表是父表的二级子表(父表不是其他表的子表)，并且子表配置的parentKey是父表的分片键
+	 * </p>
+	 * 
+	 * <p>
+	 *   在这种情况下，可以将joinKey的值，应用于父表的路由算法，得到路由结果
+	 * </p>
+	 * 
 	 * @return dataNodeIndex -&gt; [partitionKeysValueTuple+]
 	 */
 	public static Set<String> ruleByJoinValueCalculate(RouteResultset rrs, TableConfig tc,
@@ -998,6 +1006,9 @@ public class RouterUtil {
 			}
 		}
 
+		/*
+		 * 对所有表的路由结果求交集
+		 * */
 		boolean isFirstAdd = true;
 		for(Map.Entry<String, Set<String>> entry : tablesRouteMap.entrySet()) {
 			if(entry.getValue() == null || entry.getValue().size() == 0) {
@@ -1360,6 +1371,9 @@ public class RouterUtil {
 					}
 				}
 				
+				/*
+				 * 下面的逻辑处理了两种分片情况，普通分片和ER分片。
+				 * */
 				if (isFoundPartitionValue) {//分库表
 				    /*
 				     * 分库表处理比较直接，根据partitionValue，直接使用rule算法计算Node
@@ -1439,6 +1453,12 @@ public class RouterUtil {
 				} else if(joinKey != null && columnsMap.get(joinKey) != null && columnsMap.get(joinKey).size() != 0) {//childTable  (如果是select 语句的父子表join)之前要找到root table,将childTable移除,只留下root table
 					Set<ColumnRoutePair> joinKeyValue = columnsMap.get(joinKey);
 					
+					/*
+					 * yzy：现在这段代码存在bug。如果parentKey不是父表的分片键，ruleByJoinValueCalculate方法就不能计算出路由结果，
+					 *     导致mycat到所有分片上去查询。
+					 *     
+					 * 在insert的时候，mycat可以定位到分片，是因为额外执行了一条sql语句，判断父表落在哪一个分片上
+					 * */
 					Set<String> dataNodeSet = ruleByJoinValueCalculate(rrs, tableConfig, joinKeyValue);
 
 					if (dataNodeSet.isEmpty()) {
