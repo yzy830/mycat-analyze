@@ -51,6 +51,15 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
 	public List<WhereUnit> getWhereUnits() {
 		return whereUnits;
 	}
+	
+	/**
+	 * yzy:这个接口用于代码分析，没有作用
+	 * 
+	 * @return
+	 */
+	public List<WhereUnit> getStoredWhereUnits() {
+	    return storedwhereUnits;
+	}
 
 	public boolean hasOrCondition() {
 		return hasOrCondition;
