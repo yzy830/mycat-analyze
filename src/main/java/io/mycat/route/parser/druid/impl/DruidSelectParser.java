@@ -616,6 +616,23 @@ public class DruidSelectParser extends DefaultDruidParser {
 		}
 		
 	}
+	
+	/**
+	 * 这个方法的column参数并不一定是表的一个列，而是group by或者order by中的一个项。这个项可能是一个列，也可能是一个函数调用。
+	 * 
+	 * <p>
+	 *   这个方法的目的是，尝试在select列表中，找到column对应的别名。如果找到了，则直接返回别名；如果没有找到，则返回column。
+	 * </p>
+	 * 
+	 * <p>
+	 *   在进入这个方法钱，column已经做了预处理。如果column = o.order_id，那么处理后的column = order_id；如果不是这种情况，
+	 *   而是column = order_id或者column = method_invoke(order_id)，column都保持原始值
+	 * </p>
+	 * 
+	 * @param aliaColumns
+	 * @param column
+	 * @return
+	 */
 	private String getAliaColumn(Map<String, String> aliaColumns,String column ){
 		String alia=aliaColumns.get(column);
 		if (alia==null){
@@ -640,6 +657,20 @@ public class DruidSelectParser extends DefaultDruidParser {
 		}
 	}
 	
+	/**
+	 * 这个方法，是提取group by中的列名，并尝试将group by列表中的表达式转换为select中的别名。如果在select中没有别名，则直接使用表达式的值(例如
+	 * o.order_id => order_id，method_invoke(order_id) => method_invoke(order_id)
+	 * 
+	 * <p>
+	 *   这个方法很重要的一点就是，如果列带有owner前缀。要去掉owner前缀，例如o.order_id只能保留order_id。这是因为，在mysql中查询
+	 *   select o.order_id from t_d_order o得到的结果中，第一列的别名是order_id，而不是o.order_id。通过这种处理，在处理结果集时，
+	 *   如果Mycat需要从结果集中提取某一列作为group by或者order by的依据，才能够正确提取
+	 * </p>
+	 * 
+	 * @param groupByItems
+	 * @param aliaColumns
+	 * @return
+	 */
 	private String[] buildGroupByCols(List<SQLExpr> groupByItems,Map<String, String> aliaColumns) {
 		String[] groupByCols = new String[groupByItems.size()]; 
 		for(int i= 0; i < groupByItems.size(); i++) {
