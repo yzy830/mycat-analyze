@@ -1039,6 +1039,9 @@ public class RouterUtil {
 			
 			if(retNodesSet.size() > 1 && isAllGlobalTable(ctx, schema)) {
 				// mulit routes ,not cache route result
+			    /*
+			     * 如果一个SQL语句涉及多张表，并且全部是全局表，那么前面算出来的路由结果可能包含多个节点。此时，如果是SELECT语句，只需要选择其中一个
+			     * */
 				if (isSelect) {
 					rrs.setCacheAble(false);
 					routeToSingleNode(rrs, retNodesSet.iterator().next(), ctx.getSql());

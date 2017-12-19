@@ -96,6 +96,10 @@ public class DruidSelectParser extends DefaultDruidParser {
 	}
 	protected Map<String, String> parseAggGroupCommon(SchemaConfig schema, SQLStatement stmt, RouteResultset rrs, SQLSelectQueryBlock mysqlSelectQuery)
 	{
+	    /*
+	     * 存储了所有非聚合select项的全名到别名的映射，例如 o.order_id as orderId, ifnull(user_name, 0)，在
+	     * aliaColumns中有两项[o.order_id => orderId, ifnull(user_name, 0), ifnull(user_name, 0)]
+	     * */
 		Map<String, String> aliaColumns = new HashMap<String, String>();
 		Map<String, Integer> aggrColumns = new HashMap<String, Integer>();
 		// Added by winbill, 20160314, for having clause, Begin ==>

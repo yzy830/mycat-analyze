@@ -10,9 +10,14 @@ import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
 
 public class WhereUnitTest {
     public static void main(String[] args) {
-        String sql = "select * from t_d_order where status = 'Y' and "
-                + "((order_type = 'O2O' and (order_id = 1 or order_id = 2)) or "
-                + " (order_type = 'B2C' and (order_id = 3 or order_id = 4))) and (pay_status = 'PAYED')";
+//        String sql = "select * from t_d_order where status = 'Y' and "
+//                + "((order_type = 'O2O' and (order_id = 1 or order_id = 2)) or "
+//                + " (order_type = 'B2C' and (order_id = 3 or order_id = 4))) and (pay_status = 'PAYED')";
+        
+        String sql = "select * from t_d_order_base ob join t_d_order_refund oref on ob.order_id = oref.order_id where "
+                   + " (oref.status = 'Y' and (oref.order_refund_id = 97272926969004140 or oref.order_refund_id = 88998781407723752))"
+                   + " or"
+                   + " (ob.status = 'Y' and (ob.order_id = 86099032245534873 or ob.order_id = 86098918500204697))";
         
         MySqlStatementParser parser = new MySqlStatementParser(sql);
         

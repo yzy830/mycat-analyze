@@ -37,7 +37,7 @@ public class DefaultDruidParser implements DruidParser {
 	 */
 	protected DruidShardingParseInfo ctx;
 	
-	// 表原名与别名映射,原名中已经去掉了schema
+	// 表原名与别名映射,原名中已经去掉了schema以及"`"
 	private Map<String,String> tableAliasMap = new HashMap<String,String>();
 
 	private List<Condition> conditions = new ArrayList<Condition>();
@@ -165,7 +165,8 @@ public class DefaultDruidParser implements DruidParser {
 					 * 
 					 * 无论哪种情况，都无法判断这个列属于哪个表。因此，无法计算路由，直接忽略
 					 * */
-					if(visitor.getAliasMap() != null && visitor.getAliasMap().get(StringUtil.removeBackquote(condition.getColumn().getTable().toUpperCase())) == null) {//子查询的别名条件忽略掉,不参数路由计算，否则后面找不到表
+					if(visitor.getAliasMap() != null && 
+					   visitor.getAliasMap().get(StringUtil.removeBackquote(condition.getColumn().getTable().toUpperCase())) == null) {//子查询的别名条件忽略掉,不参数路由计算，否则后面找不到表
 						continue;
 					}
 					
