@@ -30,10 +30,27 @@ import java.util.Map;
 import io.mycat.sqlengine.mpp.HavingCols;
 
 public class SQLMerge implements Serializable {
+	/**
+	 * yzy: 排序列，排序方式映射。已经经过了select列表别名的映射
+	 */
 	private LinkedHashMap<String, Integer> orderByCols;
+	/**
+	 * yzy: having子句信息
+	 */
 	private HavingCols havingCols;
+	/**
+	 * yzy：这个东西感觉存储的有点奇怪。估计是有BUG
+	 * 
+	 * 当前存储了select每个聚合项的别名，与mergeCols类似，但是存储这个的意义是什么？
+	 */
 	private Object[] havingColsName;			// Added by winbill, 20160314, for having clause
+	/**
+	 * yzy: 存储select列表中，聚合项与聚合方法之间的映射关系
+	 */
 	private Map<String, Integer> mergeCols;
+	/**
+	 * yzy: 存储group by子句的列。已经经过了select列表别名的映射
+	 */
 	private String[] groupByCols;
 	private boolean hasAggrColumn;
 

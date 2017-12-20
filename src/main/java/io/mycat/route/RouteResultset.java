@@ -42,25 +42,58 @@ import java.util.Set;
  * @author mycat
  */
 public final class RouteResultset implements Serializable {
+    /**
+     * yzy: 记录原始sql，大部分情况下，在RouteResultset构造时，已经确定
+     */
     private String statement; // 原始语句
+    /**
+     * yzy: 数据库类型
+     */
     private final int sqlType;
+    /**
+     * 数据路由节点
+     */
     private RouteResultsetNode[] nodes; // 路由结果节点
+    /**
+     * yzy：忽略
+     */
     private Set<String> subTables;
+    /**
+     * yzy: 这个字段没用
+     */
     private SQLStatement sqlStatement; 
     
 
+    /**
+     * yzy: 在Limit被修改的时候，记录原始的分页偏移
+     */
     private int limitStart;
     private boolean cacheAble;
     // used to store table's ID->datanodes cache
     // format is table.primaryKey
+    /**
+     * yzy: 记录primaryKey的信息，格式是schema_tableName.primaryKey，例如
+     *      victy_shop_t_d_shop.shop_id。用于在主键查询时，记录主键。
+     *       
+     * 有这个记录时，data node在收到数据之后，会缓存primary key => data node的映射关系
+     */
     private String primaryKey;
     // limit output total
+    /**
+     * yzy: 在Limit被修改的时候，记录原始的页面大小
+     */
     private int limitSize;
+    /**
+     * 记录需要内存中合并的列。包括order by、group by、having、select聚合列
+     */
     private SQLMerge sqlMerge;
 
     private boolean callStatement = false; // 处理call关键字
 
     // 是否为全局表，只有在insert、update、delete、ddl里会判断并修改。默认不是全局表，用于修正全局表修改数据的反馈。
+    /**
+     * 记录是否SQL涉及的全部表都是
+     */
     private boolean globalTableFlag = false;
 
     //是否完成了路由
@@ -72,10 +105,19 @@ public final class RouteResultset implements Serializable {
     private boolean isLoadData=false;
 
     //是否可以在从库运行,此属性主要供RouteResultsetNode获取
+    /**
+     * yzy: 当存在锁(读锁/写锁)时，如果autocommit = false，那么canRunInReadDB = false
+     */
     private Boolean canRunInReadDB;
 
     // 强制走 master，可以通过 RouteResultset的属性canRunInReadDB=false
     // 传给 RouteResultsetNode 来实现，但是 强制走 slave需要增加一个属性来实现:
+    /**
+     * yzy: 这个变量表示是否强制走slave。
+     * 
+     * 当使用mycat:db_type=master，mycat:db_type=slave时，可以强制指定一个查询语句(INSERT/DELETE/UPDATE/DDL除外)，
+     * 走master/slave
+     */
     private Boolean runOnSlave = null;	// 默认null表示不施加影响
 
        //key=dataNode    value=slot

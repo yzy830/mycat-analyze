@@ -45,13 +45,31 @@ public final class RouteResultsetNode implements Serializable , Comparable<Route
 	 */
 	private static final long serialVersionUID = 1L;
 	private final String name; // 数据节点名称
+	/**
+	 * 记录实际要执行的语句。因为存在sql改写，因此statement可能与srcStatment不一样
+	 */
 	private String statement; // 执行的语句
+	/**
+	 * yzy: 创建RouteResultsetNode时记录的sql语句。
+	 */
 	private final String srcStatement;
 	private final int sqlType;
+	/**
+	 * 这个值是从RouteResultset拷贝过来的，表示是否可以在read db上允许
+	 */
 	private volatile boolean canRunInReadDB;
+	/**
+	 * 如果sql使用了balance注解，这个值为true
+	 */
 	private final boolean hasBlanceFlag;
     private boolean callStatement = false; // 处理call关键字
+	/**
+	 * 记录在这个节点上，分页的偏移量
+	 */
 	private int limitStart;
+	/**
+	 * 记录在这个节点上，分页的大小。例如，在跨分片的时候，需要10~20之间的数据，但是每个RouteResultsetNode上，需要取0~20之间的数据
+	 */
 	private int limitSize;
 	private int totalNodeSize =0; //方便后续jdbc批量获取扩展
    private Procedure procedure;
