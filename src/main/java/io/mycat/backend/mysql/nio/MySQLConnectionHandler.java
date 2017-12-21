@@ -51,7 +51,13 @@ public class MySQLConnectionHandler extends BackendAsyncHandler {
 
 	private final MySQLConnection source;
 	private volatile int resultStatus;
+	/**
+	 * yzy: 缓存Result Set Header
+	 */
 	private volatile byte[] header;
+	/**
+	 * yzy: 缓存结果集各列的元数据
+	 */
 	private volatile List<byte[]> fields;
 
 	/**

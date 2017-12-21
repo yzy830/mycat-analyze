@@ -389,6 +389,10 @@ public class MySQLConnection extends BackendAIOConnection {
 			modifiedSQLExecuted = true;
 		}
 		String xaTXID = sc.getSession2().getXaTXID();
+		/*
+		 * yzy: 执行的时候，使用了ServerConnection的charset，因此不同的端连接mycat可以
+		 *      使用不同的字符集
+		 * */
 		synAndDoExecute(xaTXID, rrn, sc.getCharsetIndex(), sc.getTxIsolation(),
 				autocommit);
 	}
