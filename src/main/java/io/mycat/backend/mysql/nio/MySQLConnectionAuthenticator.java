@@ -96,6 +96,10 @@ public class MySQLConnectionAuthenticator implements NIOHandler {
 				auth323(data[3]);
 				break;
 			default:
+			    /*
+			     * 在连接到MySQL后，MySQL Server会发送一个握手初始化报文，报文的第一个字段是MySQL Server的协议版本号。
+			     * MySQL 5.6的协议版本号是10。
+			     * */
 				packet = source.getHandshake();
 				if (packet == null) {
 					processHandShakePacket(data);
@@ -125,6 +129,10 @@ public class MySQLConnectionAuthenticator implements NIOHandler {
 		source.setThreadId(packet.threadId);
 
 		// 设置字符集编码
+		/*
+		 * yzy: 这里讲连接的字符集设置为server默认的字符集。完成认证，当前段获取这个
+		 * 连接执行sql时，应该会更新字符集，使用前端的字符集，否则无法正确完成数据传输
+		 * */
 		int charsetIndex = (packet.serverCharsetIndex & 0xff);
 		String charset = CharsetUtil.getCharset(charsetIndex);
 		if (charset != null) {
