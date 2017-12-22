@@ -583,6 +583,12 @@ public class UnsafeRowGrouper {
 
 		for (MergeCol merg : mergCols) {
              if(merg.mergeType != MergeCol.MERGE_AVG) {
+                 /*
+                  * 这个实现不好，绕的太多，应该为不同的基本类型编写mertFields。merge完之后，得到具体类型的值，
+                  * 再直接用toRow.setInt完成合并
+                  * 
+                  * 这个过程有太多的转换，内存和计算效率都低
+                  * */
 				 byte[] result = null;
 				 byte[] left = null;
 				 byte[] right = null;

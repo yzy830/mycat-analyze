@@ -23,6 +23,12 @@
  */
 package io.mycat.sqlengine.mpp;
 
+/**
+ * 保存一个select聚合项的元数据，包括一个ColMeta(保存列序号和类型)和mergeType(聚合方法类型)
+ * 
+ * @author Administrator
+ *
+ */
 public class MergeCol {
 	public static final int MERGE_COUNT = 1;
 	public static final int MERGE_SUM = 2;

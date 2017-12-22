@@ -84,7 +84,10 @@ public int cursor = Platform.BYTE_ARRAY_OFFSET;
   }
 
 
-  public void reset() {
+  /**
+ * 初始化cursor，将cursor设置为边长字段的开始
+ */
+public void reset() {
     cursor = Platform.BYTE_ARRAY_OFFSET + fixedSize;
   }
 

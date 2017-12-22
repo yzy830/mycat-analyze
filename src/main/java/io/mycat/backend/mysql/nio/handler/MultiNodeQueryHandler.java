@@ -563,6 +563,11 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements LoadDataR
 						int mergeType = entry.getValue();
 						if (MergeCol.MERGE_AVG == mergeType
 								&& mergeColsMap.containsKey(key + "SUM")) {
+						    /*
+						     * 在DruidSelectParser#statementParse中，会检测所有的
+						     * select项，如果发现avg方法，会替换为一个SUM和一个COUNT，其
+						     * 别名分页为<key>COUNT和<key>SUM
+						     * */
 							shouldRemoveAvgField.add((key + "COUNT")
 									.toUpperCase());
 							shouldRenameAvgField.add((key + "SUM")
@@ -573,6 +578,11 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements LoadDataR
 
 			}
 
+			/*
+			 * 给前端返回Result Set Header。如果有需要移除的field，则需要相应扣减
+			 * fieldCount。否则，直接修改后端Result Set Header的packetId，然后
+			 * 返回给前端(这样计算量最小)
+			 * */
 			source = session.getSource();
 			ByteBuffer buffer = source.allocate();
 			fieldCount = fields.size();
@@ -594,10 +604,18 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements LoadDataR
 				primaryKey = items[1];
 			}
 
+			/*
+			 * 在需要合并的情况下，columToIndx保存了从select项的别名=>列元数据的映射。
+			 * 
+			 * ColMeta保存了这个列的序号(用于从row中提取数据)和类型
+			 * */
 			Map<String, ColMeta> columToIndx = new HashMap<String, ColMeta>(
 					fieldCount);
 
 			for (int i = 0, len = fieldCount; i < len; ++i) {
+			    /*
+			     * 从这里的顺序处理方式可以看出，MySQL返回的row data中，各列的顺序与field报文发送顺序一致
+			     * */
 				boolean shouldSkip = false;
 				byte[] field = fields.get(i);
 				if (needMerg) {
@@ -608,11 +626,18 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements LoadDataR
 					if (columToIndx != null
 							&& !columToIndx.containsKey(fieldName)) {
 						if (shouldRemoveAvgField.contains(fieldName)) {
+						    /*
+						     * 需要过滤的field不必给前端，直接跳过
+						     * */
 							shouldSkip = true;
 						}
 						if (shouldRenameAvgField.contains(fieldName)) {
 							String newFieldName = fieldName.substring(0,
 									fieldName.length() - 3);
+							/*
+							 * yzy: 这里只修改了field的名称。但是类型呢，sum和avg返回的类型一致？
+							 *      需要测试一下
+							 * */
 							fieldPkg.name = newFieldName.getBytes();
 							fieldPkg.packetId = ++packetId;
 							shouldSkip = true;
@@ -635,11 +660,16 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements LoadDataR
 						primaryKeyIndex = i;
 					}
 				}   }
+			    
 				if (!shouldSkip) {
 					field[3] = ++packetId;
 					buffer = source.writeToBuffer(field, buffer);
 				}
 			}
+			
+			/*
+			 * 返回field eof报文
+			 * */
 			eof[3] = ++packetId;
 			buffer = source.writeToBuffer(eof, buffer);
 			source.write(buffer);

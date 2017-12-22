@@ -103,6 +103,12 @@ public final class BytesToBytesMap extends MemoryConsumer {
    *
    * Position {@code 2 * i} in the array is used to track a pointer to the key at index {@code i},
    * while position {@code 2 * i + 1} in the array holds key's full 32-bit hashcode.
+   * 
+   * yzy: LongArray保存HashMap的slots，每个slots由两个long构成
+   * <ol>
+   *   <li>第一个long保存了最后插入的record的开始地址。所有的record构成一个单向列表，每条记录的末尾8个字节，指向下一条记录的开始地址</li>
+   *   <li>第二个long保存了，当前slot的hashCode。这个HashMap采用了二次散列算法，在冲突的时候，需要寻找下一个slot，因此需要知道slot的hashCode</li>
+   * </ol>
    */
   @Nullable
   private LongArray longArray;
@@ -523,6 +529,9 @@ public final class BytesToBytesMap extends MemoryConsumer {
     /** An index into the hash map's Long array */
     private int pos;
     /** True if this location points to a position where a key is defined, false otherwise */
+    /**
+     * yzy: 如果slot已经指向了一个record，isDefined = true
+     */
     private boolean isDefined;
     /**
      * The hashcode of the most recent key passed to
@@ -530,10 +539,25 @@ public final class BytesToBytesMap extends MemoryConsumer {
      * to avoid re-hashing the key when storing a value for that key.
      */
     private int keyHashcode;
+    /**
+     * yzy: 保存最后一个记录的对象。如果是off heap，则是null
+     */
     private Object baseObject;  // the base object for key and value
+    /**
+     * yzy: 保存key的物理地址。对于off heap，是真实的内存地址
+     */
     private long keyOffset;
+    /**
+     * yzy: key的长度
+     */
     private int keyLength;
+    /**
+     * yzy: 保存value的物理地址。对于off heap，是真实的内存地址
+     */
     private long valueOffset;
+    /**
+     * yzy: value的长度
+     */
     private int valueLength;
 
     /**
@@ -542,6 +566,11 @@ public final class BytesToBytesMap extends MemoryConsumer {
     @Nullable
     private MemoryBlock memoryPage;
 
+    /**
+     * 这个方法执行完毕之后，Location保存了，slot中最后一个插入的record的数据偏移量等信息
+     * 
+     * @param fullKeyAddress
+     */
     private void updateAddressesAndSizes(long fullKeyAddress) {
       updateAddressesAndSizes(
         dataNodeMemoryManager.getPage(fullKeyAddress),
@@ -738,14 +767,24 @@ public final class BytesToBytesMap extends MemoryConsumer {
       Platform.copyMemory(vbase, voff, base, offset, vlen);
       offset += vlen;
       // put this value at the beginning of the list
+      /*
+       * yzy: 记录前一个record的地址
+       * */
       Platform.putLong(base, offset, isDefined ? longArray.get(pos * 2) : 0);
 
       // --- Update bookkeeping data structures ----------------------------------------------------
       offset = currentPage.getBaseOffset();
       Platform.putInt(base, offset, Platform.getInt(base, offset) + 1);
       pageCursor += recordLength;
+      /*
+       * yzy: 将地址编码，统一off heap和on heap实现。在off heap情况下recordOffset是一个64位物理地址，
+       *      这里讲编码为一个Page内的相对地址
+       * */
       final long storedKeyAddress = dataNodeMemoryManager.encodePageNumberAndOffset(
         currentPage, recordOffset);
+      /*
+       * yzy: 记录了最后一个记录的地址
+       * */
       longArray.set(pos * 2, storedKeyAddress);
       updateAddressesAndSizes(storedKeyAddress);
       numValues++;
@@ -754,6 +793,9 @@ public final class BytesToBytesMap extends MemoryConsumer {
         longArray.set(pos * 2 + 1, keyHashcode);
         isDefined = true;
 
+        /*
+         * 这个地方保证了，slots不会慢，导致safeLookup死循环
+         * */
         if (numKeys > growthThreshold && longArray.size() < MAX_CAPACITY) {
           try {
             growAndRehash();

@@ -57,10 +57,24 @@ public class ColMeta implements Serializable{
 	public static final int COL_TYPE_VAR_STRING = 0xfd;
 	public static final int COL_TYPE_STRING = 0xfe;
 	public static final int COL_TYPE_GEOMETRY = 0xff;
+	/**
+	 * 聚合方法列序号
+	 */
 	public  int colIndex;
+	/**
+	 * 聚合结果类型，来自field元数据
+	 */
 	public final int colType;
 
+	/**
+	 * avgSumIndex和avgCountIndex，用于保存一个avg聚合方法的信息。其他情况下，
+	 * 列信息都保存在colIndex中
+	 * */
     public  int avgSumIndex;
+    /**
+     * avgSumIndex和avgCountIndex，用于保存一个avg聚合方法的信息。其他情况下，
+     * 列信息都保存在colIndex中
+     * */
     public  int avgCountIndex;
 
     public ColMeta(int colIndex, int colType) {

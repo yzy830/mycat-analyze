@@ -204,7 +204,7 @@ public abstract class MySQLPacket {
     }
 
     /**
-     * 计算数据包大小，不包含包头长度。
+     * yzy: 计算数据包大小，不包含报文头长度。
      */
     public abstract int calcPacketSize();
 

@@ -267,6 +267,12 @@ public class MySQLConnection extends BackendAIOConnection {
 		return isClosed() || isQuit.get();
 	}
 
+	/**
+	 * yzy: 发送查询命令。这个方法是，后端执行QUERY命令的底层方法，会直接发送查询命令给MySQL Server
+	 * 
+	 * @param query
+	 *         sql语句
+	 */
 	protected void sendQueryCmd(String query) {
 		CommandPacket packet = new CommandPacket();
 		packet.packetId = 0;
@@ -402,6 +408,9 @@ public class MySQLConnection extends BackendAIOConnection {
 			boolean clientAutoCommit) {
 		String xaCmd = null;
 
+		/*
+		 * yzy: 这里先判断了连接的autocommid、事务隔离级别、字符集是否与前端连接一致。如果不一致，需要修改
+		 * */
 		boolean conAutoComit = this.autocommit;
 		String conSchema = this.schema;
 		// never executed modify sql,so auto commit
@@ -425,6 +434,9 @@ public class MySQLConnection extends BackendAIOConnection {
 		int autoCommitSyn = (conAutoComit == expectAutocommit) ? 0 : 1;
 		int synCount = schemaSyn + charsetSyn + txIsoLationSyn + autoCommitSyn;
 		if (synCount == 0) {
+		    /*
+		     * yzy: 在左右信息一致的情况下，直接执行语句
+		     * */
 			// not need syn connection
 			sendQueryCmd(rrn.getStatement());
 			return;

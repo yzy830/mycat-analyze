@@ -128,6 +128,10 @@ public class DataMergeService extends AbstractDataNodeMerge {
 				}
 			}
 			// add no alias merg column
+			/*
+			 * yzy: 这段代码现在已经没有用，因为在语句解析时，如果发现select项没有别名，会使用聚合方法和列序号构造一个别名，例如
+			 *      SUM1、COUNT2等
+			 * */
 			for (Map.Entry<String, ColMeta> fieldEntry : columToIndx.entrySet()) {
 				String colName = fieldEntry.getKey();
 				int result = MergeCol.tryParseAggCol(colName);

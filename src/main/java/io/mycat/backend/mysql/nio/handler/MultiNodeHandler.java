@@ -44,6 +44,9 @@ abstract class MultiNodeHandler implements ResponseHandler, Terminatable {
 	protected final NonBlockingSession session;
 	private AtomicBoolean isFailed = new AtomicBoolean(false);
 	protected volatile String error;
+	/**
+	 * yzy: 这个packetId记录了与前端交互的packetId
+	 */
 	protected byte packetId;
 	protected final AtomicBoolean errorRepsponsed = new AtomicBoolean(false);
 	
