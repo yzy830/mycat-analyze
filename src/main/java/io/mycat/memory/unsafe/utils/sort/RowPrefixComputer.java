@@ -30,6 +30,22 @@ public class RowPrefixComputer extends UnsafeExternalRowSorter.PrefixComputer {
         OrderCol[] orderCols = schema.getOrderCols();
 
         if (orderCols != null){
+        	/*
+        	 * yzy：这个代码很奇怪，可能存在Bug，需要测试。
+        	 * 
+        	 * 确实存在BUG。这个循环不应该存在，至少对于MySQL是不应该存在的。
+        	 * 
+        	 * 按照当前的处理逻辑，MyCat在排序的时候，先进行了一次前缀比较；
+        	 * 在前缀比较相同的情况下，再执行全行比较。因此，这里只能选择order by
+        	 * 的第一个行，用于计算前缀，而与select列表的顺序没有关系。
+        	 * 
+        	 * 在构造前缀计算器之后，还需要构造前缀比较器(在DataNodeMergeManager中)，
+        	 * 在构造前缀比较器的时候，MyCat又使用了第一个排序列的排序方式选择比较器(ASC/DESC)。
+        	 * 
+        	 * 例如，
+        	 * select user_id, order_id, order_sum  from t_d_order order by order_sum desc, user_id asc
+        	 * 按照当前的处理，会按照user_id降序排列，如果user_id相同，再按照order by列表计算		
+        	 * */
             for (int i = 0; i < orderCols.length; i++) {
                 ColMeta colMeta = orderCols[i].colMeta;
                 if(colMeta.colIndex == 0){

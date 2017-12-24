@@ -8,12 +8,23 @@ import java.util.Map;
 
 /**
  * Created by zagnix on 2016/6/6.
+ * 
+ * yzy: 记录了结果集各列的基本元数据
  */
 public class StructType {
 
+    /**
+     * 结果集别名到元数据映射(列序号、类型)
+     */
     private final Map<String, ColMeta> columToIndx;
+    /**
+     * 结果集列数量
+     */
     private final int fieldCount;
 
+    /**
+     * 排序字段
+     */
     private  OrderCol[] orderCols = null;
 
     public StructType(@Nonnull Map<String,ColMeta> columToIndx,int fieldCount){

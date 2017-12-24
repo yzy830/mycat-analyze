@@ -32,6 +32,24 @@ public class PrefixComparators {
     /**
      * Converts the double into a value that compares correctly as an unsigned long. For more
      * details see http://stereopsis.com/radix.html.
+     * 
+     * <p>
+     *   yzy: 这里对double的处理，涉及到内存中是复合表示一个double的。
+     * </p>
+     * 
+     * <p>
+     *   yzy: double用一个long表示，可以分为3段。bit63，符号位；bit62~52，指数位；bit51~0，数值位。
+     *   如果数值位0xffffffffffffff，表示数值位1.ffffffffffffff
+     * </p>
+     * 
+     * <p>
+     *   指数位如果是0x7ff，表示无效值，0x7ff0000000000000L表示正无穷；0xfff0000000000000L表示负无穷；
+     *   其他表示NaN，doubleToLongBits将所有的NaN表示为0x7ff8000000000000L
+     * </p>
+     * 
+     * <p>
+     *  指数位的有效取值范围是0x001~0x7fe。取值范围是-1022~1023,
+     * </p>
      */
     public static long computePrefix(double value) {
       // Java's doubleToLongBits already canonicalizes all NaN values to the smallest possible
@@ -39,6 +57,17 @@ public class PrefixComparators {
       long bits = Double.doubleToLongBits(value);
       // Negative floats compare backwards due to their sign-magnitude representation, so flip
       // all the bits in this case.
+      /*
+       * 这个地方的处理时错误的，其基本思想是：将负数安慰取反。因为，一旦转换为long表示，计算机就会按照
+       * 补码来解释数值，而补码表示中，long的绝对值越大，值就越大，这一点和double原本表示的意思是相反的。
+       * 但是，补码转换需要保证整数不变，而负数的非符号位按位取反。
+       * 
+       * 这里的处理方式，会导致相同符号的比较不会错误；而不同符号的比较时错误的
+       * 
+       * 应该这样处理
+       * 
+       * return (bits >= 0)? bits : (bits ^ 0x7fffffffffffffffL);
+       * */
       long mask = -(bits >>> 63) | 0x8000000000000000L;
       return bits ^ mask;
     }

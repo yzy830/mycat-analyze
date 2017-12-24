@@ -137,11 +137,15 @@ public final class BytesToBytesMap extends MemoryConsumer {
 
   /**
    * Number of keys defined in the map.
+   * 
+   * yzy: 被占用的slot数量
    */
   private int numKeys;
 
   /**
    * Number of values defined in the map. A key could have multiple values.
+   * 
+   * yzy: map中的记录数量
    */
   private int numValues;
 

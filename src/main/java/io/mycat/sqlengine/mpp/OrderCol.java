@@ -23,8 +23,18 @@
  */
 package io.mycat.sqlengine.mpp;
 
+/**
+ * yzy：保存排序列的元数据信息
+ *
+ */
 public class OrderCol {
+	/**
+	 * 排序类型ASC/DESC
+	 */
 	public final int orderType;
+	/**
+	 * 列序号和类型
+	 */
 	public final ColMeta colMeta;
 
 	public static final int COL_ORDER_TYPE_ASC = 0; // ASC

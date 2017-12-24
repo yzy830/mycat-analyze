@@ -35,6 +35,10 @@ public final class ByteArray {
   }
 
   /**
+   * <p>
+   *   将一个byte数组的前8个元素，组成一个long(小端字节序，因为这里处理的是字符串)。
+   * </p>
+   * 
    * Returns a 64-bit integer that can be used as the prefix used in sorting.
    */
   public static long getPrefix(byte[] bytes) {

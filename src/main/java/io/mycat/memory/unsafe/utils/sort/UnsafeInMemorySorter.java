@@ -91,6 +91,10 @@ public final class UnsafeInMemorySorter {
   /**
    * Within this buffer, position {@code 2 * i} holds a pointer pointer to the record at
    * index {@code i}, while position {@code 2 * i + 1} in the array holds an 8-byte key prefix.
+   * 
+   * <p>
+   * 每个记录占用两个long。第一个long存储记录的位置(编码后的地址)、第二个long存储了记录的前缀
+   * </p>
    */
   private LongArray array;
 
