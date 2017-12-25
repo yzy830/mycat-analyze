@@ -183,7 +183,19 @@ public class RowDataPacketSorter {
         case ColMeta.COL_TYPE_DATETIME:
         case ColMeta.COL_TYPE_NEWDATE:
         case ColMeta.COL_TYPE_BIT:
-            return BytesTools.compareTo(left,right);
+            /*
+             * yzy: 这里存在Bug。在1.6.1中，这个bug已经修复，使用了
+             * ByteUtil.compareNumberByte(left, right)方法实现，这个实现是正确的。
+             * 
+             * BytesTools.compareTo(left, right)只能用于字符串比较
+             * */
+            // <============== yzy, begin ================>
+            return ByteUtil.compareNumberByte(left, right);
+            // <============== yzy, end ================>
+            
+         // <============== 原始代码, begin ================>
+//            return BytesTools.compareTo(left,right);
+         // <============== 原始代码, end ================>   
         case ColMeta.COL_TYPE_VAR_STRING:
         case ColMeta.COL_TYPE_STRING:
             // ENUM和SET类型都是字符串，按字符串处理

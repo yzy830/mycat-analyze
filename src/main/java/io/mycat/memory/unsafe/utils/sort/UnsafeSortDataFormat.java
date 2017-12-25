@@ -81,6 +81,9 @@ public final class UnsafeSortDataFormat
       length * 16);
   }
 
+  /**
+   * 用于在排序过程中，分配缓存。这个分配空间可能很大(也可能很小，最好拆成两个方法)，并不适合在堆内分配，最好是在堆外分派
+   * */
   @Override
   public LongArray allocate(int length) {
     assert (length < Integer.MAX_VALUE / 2) : "Length " + length + " is too large";

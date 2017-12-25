@@ -137,6 +137,10 @@ public final class UnsafeInMemorySorter {
     if (recordComparator != null) {
       this.sorter = new Sorter<RecordPointerAndKeyPrefix,LongArray>(UnsafeSortDataFormat.INSTANCE);
 
+      /*
+       * 组合使用prefixComparator和recordComparator。在prefixComparator不能比较出大小的情况时，使用recordComparator
+       * 比较整行记录。这样效率可以达到最高
+       * */
       this.sortComparator = new SortComparator(recordComparator, prefixComparator, memoryManager);
 
       if (canUseRadixSort && prefixComparator instanceof PrefixComparators.RadixSortSupport) {
@@ -304,6 +308,12 @@ public final class UnsafeInMemorySorter {
         // force a full-width sort (and we cannot radix-sort nullable long fields at all).
         offset = RadixSort.sortKeyPrefixArray(array, pos / 2, 0, 7, radixSortSupport.sortDescending(),radixSortSupport.sortSigned());
       } else {
+        /*
+         * yzy: 这个地方使用归并排序排序array。这里使用管理优化过的归并排序算法，在序列部分有序的情况下，效率更高。
+         * 
+         * 因为从每个数据源来的数据是已排序的，并且socket存在read buffer(默认是4M，比较大的一个值)，因此在
+         * LongArray中的数据，很可能是分段有序的。这样的数据非常适合使用归并排序
+         * */
         sorter.sort(array,0,pos / 2,sortComparator);
       }
     }
