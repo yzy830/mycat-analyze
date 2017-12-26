@@ -58,7 +58,7 @@ public class PrefixComparators {
       // Negative floats compare backwards due to their sign-magnitude representation, so flip
       // all the bits in this case.
       /*
-       * 这个地方的处理时错误的，其基本思想是：将负数安慰取反。因为，一旦转换为long表示，计算机就会按照
+       * 这个地方的处理时错误的，其基本思想是：将负数按位取反。因为，一旦转换为long表示，计算机就会按照
        * 补码来解释数值，而补码表示中，long的绝对值越大，值就越大，这一点和double原本表示的意思是相反的。
        * 但是，补码转换需要保证整数不变，而负数的非符号位按位取反。
        * 
