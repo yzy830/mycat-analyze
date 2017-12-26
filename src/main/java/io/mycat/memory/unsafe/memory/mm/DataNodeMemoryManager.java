@@ -375,7 +375,8 @@ public class DataNodeMemoryManager {
 
   /**
    * <p>
-   * 这个方法返回的不是MemoryBlock，而是{@link MemoryBlock#getBaseObject()}，因此对off heap page，总是返回null
+   * 这个方法返回的不是MemoryBlock，而是{@link MemoryBlock#getBaseObject()}，
+   * 因此对off heap page，总是返回null
    * </p>
    * 
    * Get the page associated with an address encoded by
@@ -395,6 +396,9 @@ public class DataNodeMemoryManager {
   }
 
   /**
+   * 这个方法不是获得页内偏移，而是获得绝对偏移。如果对堆外内存，这个偏移量就是物理内存地址；
+   * 如果是堆内内存，这个就是long[]上的存储数据的偏移
+   * 
    * Get the offset associated with an address encoded by
    * {@link DataNodeMemoryManager#encodePageNumberAndOffset(MemoryBlock, long)}
    */
