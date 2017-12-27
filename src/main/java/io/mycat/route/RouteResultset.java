@@ -107,6 +107,8 @@ public final class RouteResultset implements Serializable {
     //是否可以在从库运行,此属性主要供RouteResultsetNode获取
     /**
      * yzy: 当存在锁(读锁/写锁)时，如果autocommit = false，那么canRunInReadDB = false
+     * 
+     * 当前只在DruidSelectParser中设置了这个值，对于INSERT/UPDATE/DELETE，这个字段都是NULL
      */
     private Boolean canRunInReadDB;
 

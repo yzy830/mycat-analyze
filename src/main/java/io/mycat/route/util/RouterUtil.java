@@ -749,6 +749,8 @@ public class RouterUtil {
 			nodes[0].setSlot(rrs.getDataNodeSlotMap().get(dataNode));
 		}
 		if (rrs.getCanRunInReadDB() != null) {
+		    /* 只有select语句，rrs才会设置canRunInReadDB，因此，其他情况下，这个值都是NULL，因此RouteResultsetNode的canRunInReadDB
+		     * 具有默认值NULL */
 			nodes[0].setCanRunInReadDB(rrs.getCanRunInReadDB());
 		}
 		if(rrs.getRunOnSlave() != null){

@@ -21,6 +21,15 @@ public class DruidUpdateParser extends DefaultDruidParser {
     public void statementParse(SchemaConfig schema, RouteResultset rrs, SQLStatement stmt) throws SQLNonTransientException {
         //这里限制了update分片表的个数只能有一个
         if (ctx.getTables() != null && ctx.getTables().size() > 1 && !schema.isNoSharding()) {
+            /*
+             * yzy: update t_d_user_shop us join t_d_shop s on us.shop_id = s.shop_id where s.shop_id = 1这种
+             * 连接更新操作不可用 
+             * 
+             * 从confirmShardColumnNotUpdate的注释看，这里闲置分片表是为了方便检查update item中是否包含分片列。
+             * 
+             * 其实在statementParse之前，已经做了visitorParse，可以从别名知道是否是属于分片表(如果没有别名，则肯定属于分片表，多表
+             * 列冲突，后端会报SQL错误)。只有在内联视图的情况下，不发知道，因为这个时候，在visitor的alias map中，这个别名对应的表为空。
+             * */
             String msg = "multi table related update not supported,tables:" + ctx.getTables();
             LOGGER.warn(msg);
             throw new SQLNonTransientException(msg);
@@ -45,7 +54,12 @@ public class DruidUpdateParser extends DefaultDruidParser {
             return;
         }
 
-
+        /*
+         * yzy: 这个代码主要是update item是否包含分片建。如果包含，只在分片建的更新值和路由值，都定位到一个分片是，可以执行。
+         * 
+         * 这里处理很复杂，在shardColCanBeUpdated中，又处理来了一次BooleanOr，其实没有必要。完全可以使用visitorParse
+         * 计算得到的CalculateUnit，分析每个CalculateUnit中的分片建的值是否与update item相同即可。如果不同，或者包含，均不可以执行
+         * */
         confirmShardColumnNotUpdated(update, schema, tableName, partitionColumn, joinKey, rrs);
 
 //		if(ctx.getTablesAndConditions().size() > 0) {
@@ -62,6 +76,7 @@ public class DruidUpdateParser extends DefaultDruidParser {
 //		System.out.println();
 
         if (schema.getTables().get(tableName).isGlobalTable() && ctx.getRouteCalculateUnit().getTablesAndConditions().size() > 1) {
+            /* yzy: 在前面限制表的数量为1时，这个条件不起作用 */
             throw new SQLNonTransientException("global table is not supported in multi table related update " + tableName);
         }
     }

@@ -112,6 +112,10 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		
 		SortedSet<RouteResultsetNode> nodeSet = new TreeSet<RouteResultsetNode>();
 		for(RouteCalculateUnit unit: druidParser.getCtx().getRouteCalculateUnits()) {
+		    /*
+		     * mycat最初设计的思想应该是，在DruidParser中完成RouteCalculateUnit计算和SQL重写，最后统一在这里完成路由计算。
+		     * 但是SELECT或多值insert等语句，涉及到重写，而重写很可能与路由节点信息相关，所以被提前完成了
+		     * */
 			RouteResultset rrsTmp = RouterUtil.tryRouteForTables(schema, druidParser.getCtx(), unit, rrs, isSelect(statement), cachePool);
 			if(rrsTmp != null) {
 				for(RouteResultsetNode node :rrsTmp.getNodes()) {

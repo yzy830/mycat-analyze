@@ -55,7 +55,8 @@ public final class RouteResultsetNode implements Serializable , Comparable<Route
 	private final String srcStatement;
 	private final int sqlType;
 	/**
-	 * 这个值是从RouteResultset拷贝过来的，表示是否可以在read db上允许
+	 * 这个值是从RouteResultset拷贝过来的，表示是否可以在read db上允许。因为只有SELECT语句情况下，
+	 * RouteResultset才设置这个值，因此在其他语句中，canRunInReadDB都是false
 	 */
 	private volatile boolean canRunInReadDB;
 	/**

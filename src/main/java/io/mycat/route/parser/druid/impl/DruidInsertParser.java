@@ -29,6 +29,22 @@ import io.mycat.route.util.RouterUtil;
 import io.mycat.server.parser.ServerParse;
 import io.mycat.util.StringUtil;
 
+/**
+ * DruidInsertParser的处理比较简单，因为insert into的数据源必然是单表(insert into ... select不支持)
+ * <ol>
+ *   <li>无分片表：直接路由到schema节点</li>
+ *   <li>单值插入：根据ValueClause生成一个RouteCaculateUnit</li>
+ *   <li>多值插入：将ValueClause拆分，分别计算路由，再合并相同节点的ValueClause，重写sql语句</li>
+ * </ol>
+ *
+ * <p>
+ *   如果是insert into ... on duplicate key update，则必须要检查update语句中是否包含分片建。如果包含，则报错
+ * </p>
+ * 
+ * <p>
+ *   这个代码中的ER路由处理不起作用，ER路由处理在AST路由之前，被拦截了
+ * </p>
+ */
 public class DruidInsertParser extends DefaultDruidParser {
 	@Override
 	public void visitorParse(RouteResultset rrs, SQLStatement stmt, MycatSchemaStatVisitor visitor) throws SQLNonTransientException {
@@ -174,6 +190,7 @@ public class DruidInsertParser extends DefaultDruidParser {
 				
 				String value = StringUtil.removeBackquote(insertStmt.getValues().getValues().get(i).toString());
 				
+				/*yzy: 生成RouteCalculateUnit，具体的路由计算，在DruidMycatRouteStrategy#routeNormalSqlWithAST中完成*/
 				RouteCalculateUnit routeCalculateUnit = new RouteCalculateUnit();
 				routeCalculateUnit.addShardingExpr(tableName, column, value);
 				ctx.addRouteCalculateUnit(routeCalculateUnit);
@@ -190,6 +207,11 @@ public class DruidInsertParser extends DefaultDruidParser {
 		//such as :INSERT INTO TABLEName (a,b,c) VALUES (1,2,3) ON DUPLICATE KEY UPDATE b=VALUES(b); 
 		//INSERT INTO TABLEName (a,b,c) VALUES (1,2,3) ON DUPLICATE KEY UPDATE c=c+1;
 		if(insertStmt.getDuplicateKeyUpdate() != null) {
+		    /*
+		     * yzy: 在insert into ... on duplicate key update语句中，只要update子句中没有分片建，就可以支持。
+		     * 
+		     * 在有分片建的时候，mycat无法完成路由。
+		     * */
 			List<SQLExpr> updateList = insertStmt.getDuplicateKeyUpdate();
 			for(SQLExpr expr : updateList) {
 				SQLBinaryOpExpr opExpr = (SQLBinaryOpExpr)expr;
@@ -228,6 +250,12 @@ public class DruidInsertParser extends DefaultDruidParser {
 				Map<Integer,Integer> slotsMap = new HashMap<>();
 				TableConfig tableConfig = schema.getTables().get(tableName);
 				AbstractPartitionAlgorithm algorithm = tableConfig.getRule().getRuleAlgorithm();
+				/*
+				 * 在多值插入的时候，各值的分片路由可能不同。这里将valueClauseList中的每个ValueClause拿出来独立计算路由，
+				 * 将路由结果相同的ValueClause保存在一起。
+				 * 
+				 * 后续改写插入语句，每个RouteResultsetNode只保存自己分片需要的value clause
+				 * */
 				for(ValuesClause valueClause : valueClauseList) {
 					if(valueClause.getValues().size() != columnNum) {
 						String msg = "bad insert sql columnSize != valueSize:"

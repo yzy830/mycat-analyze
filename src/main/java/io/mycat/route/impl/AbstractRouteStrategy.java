@@ -43,9 +43,14 @@ public abstract class AbstractRouteStrategy implements RouteStrategy {
 		}
 
 		/**
-     * 处理一些路由之前的逻辑
-     * 全局序列号，父子表插入
-     */
+         * 处理一些路由之前的逻辑
+         * 全局序列号，父子表插入
+         * 
+         * yzy: 对注解的处理在这个之前。因此，如果语句中有mycat:sql = 注解，序列生成、ER表、自增主键生成均不生效。
+         * 
+         * sql注解路由时，不会处理原始sql语句，因此对语句不会有任何改写。因此，如果sql中存在聚合方法、order by、group by、having、limit
+         * 等需要改写的方法时，且注解导致多分片路由时，结果均错误
+         */
 		if ( beforeRouteProcess(schema, sqlType, origSQL, sc) ) {
 			return null;
 		}
