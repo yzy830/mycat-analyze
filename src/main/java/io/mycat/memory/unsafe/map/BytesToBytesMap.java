@@ -106,7 +106,7 @@ public final class BytesToBytesMap extends MemoryConsumer {
    * 
    * yzy: LongArray保存HashMap的slots，每个slots由两个long构成
    * <ol>
-   *   <li>第一个long保存了最后插入的record的开始地址。所有的record构成一个单向列表，每条记录的末尾8个字节，指向下一条记录的开始地址</li>
+   *   <li>第一个long保存了最后插入的record的开始地址。相同key的所有的record构成一个单向列表，每条记录的末尾8个字节，指向下一条记录的开始地址</li>
    *   <li>第二个long保存了，当前slot的hashCode。这个HashMap采用了二次散列算法，在冲突的时候，需要寻找下一个slot，因此需要知道slot的hashCode</li>
    * </ol>
    */
@@ -736,6 +736,15 @@ public final class BytesToBytesMap extends MemoryConsumer {
      * @return true if the put() was successful and false if the put() failed because memory could
      *         not be acquired.
      */
+    /**
+     * @param kbase
+     * @param koff
+     * @param klen
+     * @param vbase
+     * @param voff
+     * @param vlen
+     * @return
+     */
     public boolean append(Object kbase, long koff, int klen, Object vbase, long voff, int vlen) {
       assert (klen % 8 == 0);
       assert (vlen % 8 == 0);
@@ -777,6 +786,7 @@ public final class BytesToBytesMap extends MemoryConsumer {
       Platform.putLong(base, offset, isDefined ? longArray.get(pos * 2) : 0);
 
       // --- Update bookkeeping data structures ----------------------------------------------------
+      /* yzy : 更新MemoryBlock中的记录数，方便在聚合后排序情况中，遍历block*/
       offset = currentPage.getBaseOffset();
       Platform.putInt(base, offset, Platform.getInt(base, offset) + 1);
       pageCursor += recordLength;

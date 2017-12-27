@@ -213,6 +213,8 @@ public final class UnsafeInMemorySorter {
   }
 
   /**
+   * 使用LongArray保存记录信息，每条记录占用用个long。第一个long保存记录地址，第二个long保存排序前缀。
+   * 
    * Inserts a record to be sorted. Assumes that the record pointer points to a record length
    * stored as a 4-byte integer, followed by the record's bytes.
    *

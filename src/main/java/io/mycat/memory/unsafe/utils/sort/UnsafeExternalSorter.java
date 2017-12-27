@@ -154,6 +154,11 @@ public final class UnsafeExternalSorter extends MemoryConsumer {
   @Override
   public long spill(long size, MemoryConsumer trigger) throws IOException {
     if (trigger != this) {
+      /*
+       * 如果是其他MemoryConsumer不能分配到空间，而自己还没有完成内存排序。则不释放空间。
+       * 
+       * readingIterator再getSortedInterator中创建，用于读取排序结果
+       * */
       if (readingIterator != null) {
         return readingIterator.spill();
       }
@@ -340,6 +345,8 @@ public final class UnsafeExternalSorter extends MemoryConsumer {
   }
 
   /**
+   * yzy: 检查InMemeorySorter的空间是否足够，如果不足够，重试增大InMemory的空间
+   * 
    * Checks whether there is enough space to insert an additional record in to the sort pointer
    * array and grows the array if additional space is required. If the required space cannot be
    * obtained, then the in-memory data will be spilled to disk.
@@ -389,6 +396,12 @@ public final class UnsafeExternalSorter extends MemoryConsumer {
   }
 
   /**
+   * UnsafeExternalSorter使用InMemorySorter完成排序，因此插入的过程分为两步
+   * <ol>
+   *   <li>在MemoryBlock中记录数据。直接使用memory copy将数据拷贝到内存页中</li>
+   *   <li>将记录的地址和前缀插入InMemorySorter，完成排序</li>
+   * </ol>
+   * 
    * Write a record to the sorter.
    */
   public void insertRecord(Object recordBase, long recordOffset, int length, long prefix)
