@@ -615,6 +615,16 @@ public class RouterUtil {
 		return processedInsert;
 	}
 
+	/**
+	 * 这个方法用于拆解批量插入语句。当插入语句需要自增主键的时候，MyCat需要将value clause拆分，然后组装成独立的insert语句，再执行。
+	 * 
+	 * 这里对insert的拆分，使用字符串解析，每个value clause使用“(”开始、使用")"结尾，导致如果value clause中包含函数调动，
+	 * insert语句会报错
+	 * 
+	 * @param origSQL
+	 * @param valuesIndex
+	 * @return
+	 */
 	public static List<String> handleBatchInsert(String origSQL, int valuesIndex){
 		List<String> handledSQLs = new LinkedList<>();
 		String prefix = origSQL.substring(0,valuesIndex + "VALUES".length());
