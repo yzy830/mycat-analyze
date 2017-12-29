@@ -59,6 +59,11 @@ public class NonBlockingSession implements Session {
      * 拥有这个session的前段连接
      */
     private final ServerConnection source;
+    /**
+     * 保存当前session上，正在使用的连接。当一个session执行语句的连接申请成功时，都会保存在target中；当连接释放时，会从
+     * target移除。当autocommit = true，后端业务执行完毕之后，连接会被释放，并从target移除；而当autocommit = false时，
+     * 后端连接业务执行完毕之后，不会释放连接，下一次再在统一节点上执行业务时，会复用同一个连接。
+     */
     private final ConcurrentHashMap<RouteResultsetNode, BackendConnection> target;
     private final ConcurrentHashMap<RouteResultsetNode, BackendConnection> lockedTarget;
     // life-cycle: each sql execution
@@ -416,6 +421,9 @@ public class NonBlockingSession implements Session {
 	}
 	
     /**
+     * 在target中记录RouteResultsetNode=>conn的映射关系，这个映射关系在连接释放时解除。
+     * RouteResultsetNode重写了equals，在没有使用subTables这个配置时，只要data node的名称相同，就认为两者相同
+     * 
      * @return previous bound connection
      */
     public BackendConnection bindConnection(RouteResultsetNode key,
@@ -444,11 +452,19 @@ public class NonBlockingSession implements Session {
         // conn 是 slave db 的，并且 路由结果显示，本次sql可以重用该 conn
         if (conn.isFromSlaveDB() && (node.canRunnINReadDB(getSource().isAutocommit())
                 && (node.getRunOnSlave() == null || node.getRunOnSlave()))) {
+            /*
+             * 如果connection来自slave，只有在两个条件下可用
+             * (1) sql可以在slave上执行。因此，必须是select语句、没有加锁(或者锁着加锁了，但是autocommit为true)，并且autocommit=true或者使用了balance注解
+             * (2) 没有使用db_type注解，指定在master上执行
+             * */
             canReUse = true;
         }
 
         // conn 是 master db 的，并且路由结果显示，本次sql可以重用该conn
         if (!conn.isFromSlaveDB() && (node.getRunOnSlave() == null || !node.getRunOnSlave())) {
+            /*
+             * 如果connection来自slave，只要没有使用db_type注解，指定在slave上执行
+             * */
             canReUse = true;
         }
 
@@ -465,6 +481,17 @@ public class NonBlockingSession implements Session {
                 LOGGER.debug("release slave connection,can't be used in trasaction  "
                         + conn + " for " + node);
             }
+            /*
+             * yzy：这个地方存在严重BUG。例如执行以下语句
+             * 
+             * begin;
+             * 
+             * insert into ...
+             * 
+             * /mycat:db_type = slave/ select ... (与上一条语句在同一个分片上)
+             * 
+             * 那么第二次的select语句将导致第一条insert语句回滚
+             * */
             releaseConnection(node, LOGGER.isDebugEnabled(), false);
         }
         return false;

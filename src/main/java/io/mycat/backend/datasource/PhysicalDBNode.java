@@ -93,6 +93,14 @@ public class PhysicalDBNode {
 		}
 	}
 	
+	/**
+	 * @param schema
+	 * @param autoCommit
+	 * @param rrs
+	 * @param handler
+	 * @param attachment
+	 * @throws Exception
+	 */
 	public void getConnection(String schema,boolean autoCommit, RouteResultsetNode rrs,
 							ResponseHandler handler, Object attachment) throws Exception {
 		checkRequest(schema);
@@ -129,6 +137,11 @@ public class PhysicalDBNode {
 				}
 			}else{	// 没有  /*db_type=master/slave*/ 注解，按照原来的处理方式
 				LOGGER.debug("rrs.getRunOnSlave() " + rrs.getRunOnSlave());	// null
+				/*
+				 * yzy: 只有在autocommit或者使用了balance注解情况下的select语句才能在slave上执行。
+				 * 
+				 * 如果select语句有写锁或者读锁，就算使用了balance注解，也不能走slave
+				 * */
 				if (rrs.canRunnINReadDB(autoCommit)) {
 					dbPool.getRWBanlanceCon(schema,autoCommit, handler, attachment, this.database);
 				} else {

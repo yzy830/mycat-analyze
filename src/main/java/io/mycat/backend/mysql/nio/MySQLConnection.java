@@ -372,6 +372,10 @@ public class MySQLConnection extends BackendAIOConnection {
 	}
 
 	/**
+	 * yzy：这个给SingleNodeHandle和MultipleNodeHandler等调用，用于判断是否应该进一步处理响应报文。
+	 * 
+	 * 返回true，表示需要进一步处理
+	 * 
 	 * @return if synchronization finished and execute-sql has already been sent
 	 *         before
 	 */
@@ -396,7 +400,7 @@ public class MySQLConnection extends BackendAIOConnection {
 		}
 		String xaTXID = sc.getSession2().getXaTXID();
 		/*
-		 * yzy: 执行的时候，使用了ServerConnection的charset，因此不同的端连接mycat可以
+		 * yzy: 执行的时候，使用了ServerConnection的charset、txIsolation、autocommmit等信息，因此不同的端连接mycat可以
 		 *      使用不同的字符集
 		 * */
 		synAndDoExecute(xaTXID, rrn, sc.getCharsetIndex(), sc.getTxIsolation(),
@@ -435,7 +439,7 @@ public class MySQLConnection extends BackendAIOConnection {
 		int synCount = schemaSyn + charsetSyn + txIsoLationSyn + autoCommitSyn;
 		if (synCount == 0) {
 		    /*
-		     * yzy: 在左右信息一致的情况下，直接执行语句
+		     * yzy: 信息一致的情况下，直接执行语句
 		     * */
 			// not need syn connection
 			sendQueryCmd(rrn.getStatement());
@@ -448,6 +452,12 @@ public class MySQLConnection extends BackendAIOConnection {
 			// getChangeSchemaCommand(sb, conSchema);
 		}
 
+		/*
+		 * yzy: 将信息同步语句与实际要执行的语句拼接在一起，通过一个报文发送给MySQL Server。
+		 * 
+		 * 从这个处理，可以看出，MySQL其实是原生支持流式处理量的，只是现在的JDBC客户端采用的请求响应方式。当连续发送多条命名给MySQL时(不管是通过语句拼接的方式，
+		 * 将查询命令拼接在一起；还是连续发送多个不同的报文)，MySQL会分别处理每一个报文以及一个报文中的多条语句，然后将每个命令报文和语句的响应结果返回给客户端
+		 * */
 		if (charsetSyn == 1) {
 			getCharsetCommand(sb, clientCharSetIndex);
 		}
@@ -466,9 +476,20 @@ public class MySQLConnection extends BackendAIOConnection {
 					+ (schemaCmd != null) + " con:" + this);
 		}
 		metaDataSyned = false;
+		/*
+		 * 用于在收到OK Response时，判定这个响应报文是否需要返回给客户端。例如，这里需要同步charset和autocommit，
+		 * 那么收到的前两个ok response是不能返回给前段的，否则会造成结果混乱。
+		 * 
+		 * 因此，不管是SingleNodeHandler还是MultipleNodeQueryHandler，在收到ok response时，都会先调用
+		 * syncAndExcute方法，判定这个报文是否应该返回给前端
+		 * */
 		statusSync = new StatusSync(xaCmd != null, conSchema,
 				clientCharSetIndex, clientTxIsoLation, expectAutocommit,
 				synCount);
+		/*
+		 * yzy: 这里需要注意，由于schema选择的报文命令类型与查询语句的命令类型不一样(前者是COM_INIT_DB，后者是COM_QUERY)，
+		 * 因此，不能吧use database这条语句拼接到实际要执行的语句中。
+		 * */
 		// syn schema
 		if (schemaCmd != null) {
 			schemaCmd.write(this);

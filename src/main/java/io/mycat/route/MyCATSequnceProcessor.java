@@ -25,6 +25,12 @@ public class MyCATSequnceProcessor {
 		new ExecuteThread().start();
 	}
 
+	/**
+	 * 这个实现并不好。在大部分情况下，sequence的生成是不会造成线程阻塞的，比如本地序列、本地被缓存的序列等等。因此，应该采用异步方法。只要在需要申请情况的时候再挂链。
+	 * 而且，也不应该用一个线程来异步执行，而是应该在reactor收到序列增长响应的时候执行。
+	 * 
+	 * @param pair
+	 */
 	public void addNewSql(SessionSQLPair pair) {
 		seqSQLQueue.add(pair);
 	}

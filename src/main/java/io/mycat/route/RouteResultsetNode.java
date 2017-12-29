@@ -81,6 +81,9 @@ public final class RouteResultsetNode implements Serializable , Comparable<Route
 	// 传给 RouteResultsetNode 来实现，但是 强制走 slave需要增加一个属性来实现:
 	private Boolean runOnSlave = null;	// 默认null表示不施加影响, true走slave,false走master
 	
+	/**
+	 * 只有使用subTables这个配置的时候，这个字段才有用，其他情况下都是NULL。这个特性我们不会用到
+	 */
 	private String subTableName; // 分表的表名
 
 	//迁移算法用     -2代表不是slot分片  ，-1代表扫描所有分片

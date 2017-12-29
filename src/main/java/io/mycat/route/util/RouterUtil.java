@@ -608,6 +608,20 @@ public class RouterUtil {
 		boolean processedInsert=!isPKInFields(origSQL,primaryKey,firstLeftBracketIndex,firstRightBracketIndex);
 		if(processedInsert){
 			List<String> insertSQLs = handleBatchInsert(origSQL, valuesIndex);
+			/*
+			 * yzy: 这个地方的处理存在严重BUG。在拆解为多个SQL之后，每个SQL会单独路由处理处理。加入一个INSERT语句插入两条结果，那么这两条的OK Response可能都
+			 * 返回给客户端，客户端在读取第一个OK Response之后，就认为结束了。如果在这个连接上再执行这个语句，就会得到前一个的结果集，例如执行select语句，可能得到
+			 * 一个Query OK, 1 rows affected
+			 * 
+			 * 但是在autocommit = true时，这个问题又不是必显的。原因在于，如果MyCat处理比较快，会导致两条SQL在后端使用同一个连接，
+			 * 而第一个OK Respones在返回的时候，后端连接会被释放给连接池，此时连接上的response handler会被设置为null，因此
+			 * 后一个OK Response会被忽略
+			 * 
+			 * 在autocommit = false时，这个问题是必显的。但是此时在mysql client上表现出来并不是结果集混乱，而是直接报错，并终端连接，
+			 * 这个可能是client做了特殊处理。对于jdbc的客户端，可能不会出错，原因在于jdbc客户端端在处理一个古老的linux内核BUG时，在每次
+			 * 读取一个response之后，都会清理input stream中后续的数据。如果清理干净了，下次再执行语句的时候，就不会出错；反之，在下次
+			 * 解析结果集的时候，会报异常
+			 * */
 			for(String insertSQL:insertSQLs) {
 				processInsert(sc, schema, sqlType, insertSQL, tableName, primaryKey, firstLeftBracketIndex + 1, insertSQL.indexOf('(', firstRightBracketIndex) + 1);
 			}
